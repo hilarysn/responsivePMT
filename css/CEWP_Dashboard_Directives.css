@@ -1,0 +1,9 @@
+﻿#tblDirectives { }
+/*#tblDirectives th, #tblDirectives td { padding: 4px; border: 1px solid black; }*/
+/*#tblDirectives th.squarekpi, #tblDirectives th.circlekpi { width: 100px; }*/
+.greencircle { background-image: url(../images/greendot.png); background-position: center center; background-repeat: no-repeat; background-size: 16px 16px; }
+.redcircle { background-image: url(../images/reddot.png); background-position: center center; background-repeat: no-repeat; background-size: 16px 16px; }
+.yellowcircle { background-image: url(../images/yellowdot.png); background-position: center center; background-repeat: no-repeat; background-size: 16px 16px; }
+.greensquare { background-image: url(../images/green_svg.png); background-position: center center; background-repeat: no-repeat; background-size: 16px 16px; }
+.redsquare { background-image: url(../images/red_svg.png); background-position: center center; background-repeat: no-repeat; background-size: 16px 16px; }
+.yellowsquare { background-image: url(../images/yellow_svg.png); background-position: center center; background-repeat: no-repeat; background-size: 16px 16px; }

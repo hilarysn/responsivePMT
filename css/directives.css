@@ -1,0 +1,60 @@
+#Directives { border: 1px solid red; min-height: 100px; padding-top: 10px; }
+.nomargin { margin: 0 !important; }
+.nopadding { padding: 0 !important; }
+.row { margin-bottom: 6px; }
+label {
+    text-align: right;
+    vertical-align: middle;
+    line-height: 34px;
+}
+.disabled { cursor: not-allowed !important; }
+.centercontent { display: flex; justify-content: center; align-items: center; }
+
+#btnSubmit {
+    color: #ffffff;
+    display: flex;
+    width: 200px;
+    margin: 10px;
+    height: 50px;
+    justify-content: center;
+    align-items: center;
+    background-color: #00aeef !important;
+    background-image: none;
+    border: 1px solid #60b3d2;
+    border-radius: 5px;
+    margin-right: 0;
+}
+#btnUpload {
+    color: #ffffff;
+    display: flex;
+    width: 200px;
+    margin: 10px;
+    height: 50px;
+    justify-content: center;
+    align-items: center;
+    background-color: #13deeb !important;
+    background-image: none;
+    border: 1px solid #60b3d2;
+    border-radius: 5px;
+    margin-right: 0;
+}
+#btnUpdate {
+    color: #ffffff;
+    display: flex;
+    width: 200px;
+    margin: 10px;
+    height: 50px;
+    justify-content: center;
+    align-items: center;
+    background-color: #36eb13 !important;
+    background-image: none;
+    border: 1px solid #60b3d2;
+    border-radius: 5px;
+    margin-right: 0;
+}
+#Directives a:hover { text-decoration: none !important; }
+.flex-control {
+    display: flex;
+    align-items: center;
+    height: 34px;
+}

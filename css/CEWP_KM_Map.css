@@ -1,0 +1,62 @@
+﻿#map, #map_container {
+ 	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	margin: auto;
+	z-index: 50;
+}
+#map_loading {
+    position: absolute;
+    background: #ffffff;
+    width: 350px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    height: 120px;
+    padding: 10px;
+    color: #000000;
+    margin: auto;
+    font-family: "Segoe UI";
+    font-size: 16px;
+    text-align: center;
+    vertical-align: middle;
+    display: block;
+    z-index: 51;
+}
+
+.popRow {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 16px;
+	margin-bottom: 1px;
+}
+.popdata {
+	height: 100%;
+}
+.popBox {
+	position: relative;
+	background: rgba(0, 0, 255, 0.8); /*#0000ff;*/
+	color: #ffffff;
+	margin: 15px 0px;
+	border: 2px solid black;
+	width: 180px;
+	cursor: pointer;
+}
+.highcharts-container {
+	overflow: visible !important;
+}
+.highcharts-title {
+	color: #000000 !important;
+	fill: #000000 !important;
+}
+.chartpopup {
+	background: rgba(255, 255, 255, 1);
+	min-width: 125px;
+}
+.info-right {
+	position: absolute;
+	top: 0;
+	right: 0;
+}

@@ -1,0 +1,62 @@
+﻿#tblLegend {
+}
+
+#tblLegend .greencircle {
+    background-image: url(../images/greendot.png);
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: 16px 16px;
+    height: 16px;
+    width: 20px;
+    display: inline-block;
+}
+
+#tblLegend .redcircle {
+    background-image: url(../images/reddot.png);
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: 16px 16px;
+    height: 16px;
+    width: 20px;
+    display: inline-block;
+}
+
+#tblLegend .yellowcircle {
+    background-image: url(../images/yellowdot.png);
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: 16px 16px;
+    height: 16px;
+    width: 20px;
+    display: inline-block;
+}
+
+#tblLegend .greensquare {
+    background-image: url(../images/green_svg.png);
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: 16px 16px;
+    height: 16px;
+    width: 20px;
+    display: inline-block;
+}
+
+#tblLegend .redsquare {
+    background-image: url(../images/red_svg.png);
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: 16px 16px;
+    height: 16px;
+    width: 20px;
+    display: inline-block;
+}
+
+#tblLegend .yellowsquare {
+    background-image: url(../images/yellow_svg.png);
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: 16px 16px;
+    height: 16px;
+    width: 20px;
+    display: inline-block;
+}

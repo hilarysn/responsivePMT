@@ -1,0 +1,15 @@
+﻿.hiddenvalidation { display: none; }
+#EditForm, #NewForm { margin-top: 15px; }
+.form-control { width: auto !important; max-width: 500px; height: 30px; padding: 3px; }
+.has-success .form-control {
+    border-color: #3c763d;
+    box-shadow: inset 0px 2px 2px rgba(0,0,0,0.075), 0px 0px 6px #3c763d !important; 
+}
+.has-error .form-control {
+    border-color: #a94442;
+    box-shadow: inset 0px 2px 2px rgba(0,0,0,0.075), 0px 0px 6px #a94442 !important; 
+}
+.btn { float: right; margin-left: 15px; }
+.form-group {
+    margin-bottom: 6px;
+}

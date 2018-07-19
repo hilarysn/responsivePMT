@@ -1,0 +1,13 @@
+﻿body #s4-leftpanel {
+    display: none !important;
+}
+
+.s4-ca {
+    margin-left: 0px !important;
+}
+
+.webpartcontainer {
+    position: relative;
+    height: 522px;
+    display: block;
+}

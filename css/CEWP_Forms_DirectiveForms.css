@@ -1,0 +1,44 @@
+﻿body #s4-leftpanel { display: none !important;}
+.s4-ca { margin-left: 0px !important;}
+.hiddenvalidation { display: none; }
+#EditForm, #NewForm, #ViewForm, .tab-pane { margin-top: 15px; min-width: 1000px; }
+.form-control { /*max-width: 500px;*/ max-height: 50px; padding: 3px; }
+.btn { float: right; margin-left: 15px; }
+.has-success .form-control, .form-control .has-success {
+    border-color: #3c763d;
+    box-shadow: inset 0px 2px 2px rgba(0,0,0,0.075), 0px 0px 6px #3c763d !important; 
+}
+.has-error .form-control, .form-control .has-error {
+    border-color: #a94442;
+    box-shadow: inset 0px 2px 2px rgba(0,0,0,0.075), 0px 0px 6px #a94442 !important; 
+}
+.form-group { margin-bottom: 6px; }
+/*#ViewForm .control-label {
+    border: 1px solid #000000;
+}
+#ViewForm .control-field {
+    border: 1px solid #000000;
+}*/
+.thactions { width: 150px; }
+/*html, body {
+    height: 100%;
+    padding: 0px;
+    margin: 0px;
+}*/
+.weekend { background: #f4f7f4 !important;}
+.gantt_selected .weekend { background: #FFF3A1 !important;}
+.well { text-align: right;}
+@media (max-width: 991px) {
+    .nav-stacked > li {
+        float: left;
+    }
+}
+
+.container-fluid .row {margin-bottom: 10px;}
+.container-fluid .gantt_wrapper {
+    height: 700px;
+    width: 100%;
+}
+.gantt_container { border-radius: 4px;}
+.gantt_grid_scale { background-color: transparent;}
+.gantt_hor_scroll { margin-bottom: 1px;}

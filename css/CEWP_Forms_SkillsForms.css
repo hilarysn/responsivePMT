@@ -1,0 +1,14 @@
+﻿body #s4-leftpanel {
+    display: none !important;
+}
+
+.s4-ca {
+    margin-left: 0px !important;
+}
+
+#EditForm, #NewForm { margin-top: 15px; min-width: 700px; }
+.form-control { max-height: 50px; padding: 3px; }
+.btn { float: right; margin-left: 15px; }
+.form-group {
+    margin-bottom: 6px;
+}

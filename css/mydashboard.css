@@ -1,0 +1,121 @@
+.art-content-layout .art-sidebar1, div.art-search-location, div.art-header, div.art-nav, .ms-addnew { display: none; }
+.btndisabled { cursor: not-allowed !important; }
+
+.nav-tabs { height: 41px !important; }
+.dashboardtab > a { height: 19px !important; }
+.badge { margin-left: 8px; margin-top: -3px; }
+
+.ColumnTitle { font-size: 20px; display: flex; justify-content: center; vertical-align: middle; height: 30px; margin-bottom: 10px;}
+
+.nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus {
+    color: #ffffff;
+    background-color: #000000;
+    border: 1px solid #000000;
+    border-bottom-color: transparent;
+    cursor: default;
+}
+
+a:hover, a:focus {
+    color: #ffffff;
+}
+
+.dropdown-menu {
+    background: #ffffff !important;
+}
+
+.dropdown-submenu {
+    position: relative;
+}
+
+.dropdown-submenu .dropdown-menu {
+    top: 0;
+    left: 100%;
+    margin-top: -1px;
+    background: #ffffff !important;
+    max-height: 200px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+.dropdown-menu > li > a {
+    padding: 5px 20px;
+    color: #000000 !important;
+}
+
+.dropdown-menu > li > a:hover, .dropdown-menu > li > a:focus {
+    text-decoration: none;
+    color: #ffffff !important;
+    background-color: #000000;
+}
+
+#ulSAPs { left: 180px; }
+
+.status {
+    position:relative;
+    left:25%;
+    top:-80px;
+    display:none;
+    background-color:#f00;
+    color:#fff;
+    border-radius:50px;
+    padding:2px 10px;
+}
+
+.col-xs-4 {
+    border-right:1px #d3d3d3 solid;
+    margin:25px 0;
+    padding:20px 2% 0;
+    text-align:center;
+    height:220px;
+}
+
+.col-xs-4:last-child {
+    border:none;
+}
+
+.col-xs-4 h1 {
+    font-size:28px;
+    font-weight:200;
+    margin-bottom:10px;
+}
+
+.col-xs-4 p {
+    margin-bottom:20px;
+    font-size:14px;
+    font-weight:400;
+}
+
+.col-xs-4 a.button {
+    border:1px #d3d3d3 solid;
+    border-radius:10px;
+    padding:10px 20px;
+    text-decoration:none;
+}
+
+.col-xs-4 a.button:hover {
+    border:1px #0b7fc9 solid;
+    background-color:#0b7fc9;
+    color:#FFF;
+    border-radius:10px;
+    padding:10px 20px;
+    text-decoration:none;
+}
+
+.col-xs-4 a:visited{
+	color:#0072c6
+}
+
+.modal-vertical-alignment-helper {
+	display:table;
+	height: 100%;
+	width: 100%;
+}
+.modal-vertical-align-center {
+	display: table-cell;
+	vertical-align: middle;
+}
+.modal-content-inherit {
+	width:inherit;
+	height:inherit;
+	margin: 0 auto;
+}
