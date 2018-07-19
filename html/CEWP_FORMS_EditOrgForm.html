@@ -1,0 +1,34 @@
+﻿<style type="text/css">
+
+</style>
+
+<script language="javascript" type="text/javascript">
+    SP.SOD.executeOrDelayUntilScriptLoaded(function () {
+        var SLASH = "/";
+        var tp1 = new String(window.location.protocol);
+        var tp2 = new String(window.location.host);
+        var tp3 = L_Menu_BaseUrl;
+        var site = tp1 + SLASH + SLASH + tp2 + tp3;
+        SP.SOD.registerSod('CEWP_FORMS_EditOrgForm.js', site + "/SiteAssets/js/CEWP_FORMS_EditOrgForm.js");
+        EnsureScriptFunc("CEWP_FORMS_EditOrgForm.js", null, function () {
+            FormInit(site);
+        });
+    }, "sp.js");
+</script>
+
+<div data-role="form" style="display:none">
+    <div class="container-fluid" id="EditForm">
+        <div class="row">
+            <div data-field="Title"></div>
+        </div>
+        <div class="row">
+            <div data-field="Command"></div>
+        </div>
+        <div class="row">
+            <div data-field="Base"></div>
+        </div>
+        <div class="row">
+            <div data-field="Major Achievements"></div>
+        </div>
+    </div>
+</div>

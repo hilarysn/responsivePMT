@@ -1,0 +1,155 @@
+﻿<div id="dbAuthorities"></div>
+
+
+<!-- Time for all the javascript -->
+<script type="text/javascript">
+$(document).ready(function(){
+    waitForThisUser();
+	
+	function waitForThisUser(){
+	    if(typeof _thisUser !== "undefined"){
+			HCHelper.init().done(function(){
+				if($().SPHelper.GetURLParam("VisibilityContext") ==="WSSWebPartPage"){
+					dbAuthority.pageEdit();
+				}else{
+					dbAuthority.init();
+				}
+			});
+	    }
+	    else{
+	        setTimeout(function(){
+	            waitForThisUser();
+	        },10);
+	    }
+	}
+});//End Doc Ready
+
+(function(dbAuthority,$,undefined){
+	var _listQuery = {};
+		_listQuery["Y"] = "<Query><OrderBy><FieldRef Name='ID' /></OrderBy><Where><Eq><FieldRef Name='FY' /><Value Type='Text'>"+ _dt.FY.yyyy +"</Value></Eq></Where></Query>";
+		_listQuery["Q"] = "<Query><OrderBy><FieldRef Name='ID' /></OrderBy><Where><And><Eq><FieldRef Name='FY' /><Value Type='Text'>"+ _dt.FY.yyyy +"</Value></Eq><Eq><FieldRef Name='Quarter' /><Value Type='Text'>"+ _dt.Quarter +"</Value></Eq></And></Where></Query>";
+		_listQuery["M"] = "<Query><OrderBy><FieldRef Name='ID' /></OrderBy><Where><And><Eq><FieldRef Name='FY' /><Value Type='Text'>"+ _dt.FY.yyyy +"</Value></Eq><Contains><FieldRef Name='ReportMonth' /><Value Type='Text'>"+ _dt.Month +"</Value></Contains></And></Where></Query>";
+		_listQuery["W"] = "<Query><OrderBy><FieldRef Name='ID' /></OrderBy><Where><And><Eq><FieldRef Name='FY' /><Value Type='Text'>"+ _dt.FY.yyyy +"</Value></Eq><Eq><FieldRef Name='StartWeek' /><Value Type='DateTime' IncludeTimeValue='False'>"+ _dt.StartOfWeek +"</Value></Eq></And></Where></Query>";
+
+	dbAuthority.pageEdit = function(){
+		$('#divDBAuthorities').empty().append("<div style='margin:5px;text-align:center;font-weight:bold;font-size:14px;font-style:italic;'>Query Suspended During Page Edit Mode</div>");
+		$("#tblDBAuthorities").show();
+	};
+
+	dbAuthority.refresh = function(param){
+		$('#divDBAuthorities').highcharts().destroy();
+		dbAuthority.init(param);
+	};
+
+	dbAuthority.init = function(QueryParam){
+		QueryParam = QueryParam || "Y";
+
+		var chartWidth = (($("#pmtPageHeader").width()/3)-4);
+		var tblBody = [];
+		tblBody.push("<div class='datagrid'><table style='width:"+chartWidth+"px;'>");
+		tblBody.push("<thead><tr><th style='text-align:center;'>Authority</th></tr></thead><tbody>");
+		tblBody.push("<tr><td><div id='divDBAuthorities' style='height:300px;border:0px solid;margin: 0 1em 1em 0;'></div></td></tr>");
+		tblBody.push("</tbody></table></div>");
+		$('#dbAuthorities').closest("td[id*='tdR']").html('').append(tblBody.join(""));
+
+		var name = 'Authorities';
+		var series = [];
+		var dataPulls = [];
+		var actions = {};
+		var dirs = {};
+		var stds = {};
+		var seriesY = {};
+		var mapAut = {};
+		var mapAutToDS = {};
+		var ttlHrs = parseFloat("0.00");
+
+		dataPulls.push(PMT.getDirectives().then(function(){
+			dirs = $.extend({},this.data);
+		}));		
+		dataPulls.push(PMT.getStandards().then(function(){
+			stds = $.extend({},this.data);
+		}));			
+
+		dataPulls.push(PMT.getActions({	CAMLQuery: _listQuery[QueryParam] }).then(function(){
+			actions = $.extend({},this.data.entry);
+		}).then(function(){
+			$.each(dirs,function(idx,el){
+				if(!(/undefined/.test(el.Authority.lookupId))){
+					mapAut[el.Authority.lookupId] = {Title: el.Authority.lookupValue, Hours: 0};
+					mapAutToDS["D" + el.ID] = {AutID: el.Authority.lookupId};
+				}
+			});
+		}).then(function(){
+			$.each(stds,function(idx,el){
+				if(!(/undefined/.test(el.Authority.lookupId))){
+					mapAut[el.Authority.lookupId] = {Title: el.Authority.lookupValue, Hours: 0};
+					mapAutToDS["S" + el.ID] = {AutID: el.Authority.lookupId};
+				}
+			});
+		}).then(function(){
+			$.each(actions ,function(idx,el){
+				ttlHrs += parseFloat(el.Hours);
+				if( el.EffortType === "Directive"){
+					mapAut[mapAutToDS["D" + el.Directive.ID].AutID].Hours += el.Hours
+				}
+				if( el.EffortType === "Standard"){
+					mapAut[mapAutToDS["S" + el.Standard.ID].AutID].Hours += el.Hours
+				}
+			});
+		}).then(function(){
+			$.each(mapAut,function(idx,el){
+				if(typeof seriesY[el.Title]==='undefined'){
+					seriesY[el.Title] = parseFloat(el.Hours);
+					series.push({ name: el.Title, y: parseFloat("0.00"), hrs: parseFloat("0.00") });
+				}else{
+					seriesY[el.Title] += parseFloat(el.Hours);										
+				}
+			});
+		}).then(function(){
+			$.each(series,function(idx,el){
+				el.y = parseFloat(((seriesY[el.name]/ttlHrs)*100).toFixed(2));
+				el.hrs = parseFloat(seriesY[el.name].toFixed(2));
+			});
+		}).then(function(){
+			series.sort(sort_by("y",true));
+		}).done(function(){
+			var parser = [];
+			$.each(series,function(idx,el){
+				if(el.y > 0){
+					parser.push(el);
+				}
+			});
+			series = $.extend([],parser);
+		}));
+
+		$.when(dataPulls).then(function(){
+			HCHelper.makePie({
+				pageContainer: "divDBAuthorities",
+				widget: null,
+				chartRefresh: (function(param){
+					dbAuthority.refresh(param);
+				}),
+				seriesData: series,
+				seriesName: name,
+				legendEnabled: true,
+				tooltipOpts: {	pointFormat: '<b>{point.hrs} Hrs</b>' }
+			});
+		}).fail(function(){
+			$().SPHelper.debug("Something Failed");
+		}).done(function(){
+			$("#loadingBox").hide();
+		});
+		
+	};
+	//Sort an array of objects
+	function sort_by(field, reverse, primer){
+	   var key = function (x) {return primer ? primer(x[field]) : x[field]};
+	
+	   return function (a,b) {
+		  var A = key(a), B = key(b);
+		  return ( (A < B) ? -1 : ((A > B) ? 1 : 0) ) * [-1,1][+!!reverse];                  
+	   }
+	}
+}( window.dbAuthority = window.dbAuthority || {}, jQuery ));     
+
+</script>

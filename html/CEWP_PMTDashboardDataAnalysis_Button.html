@@ -1,0 +1,29 @@
+﻿<style type="text/css">
+    #Authority {
+        height: 350px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+</style>
+<!--<script language="javascript" type="text/javascript">
+    jQuery(document).ready(function () {
+        SP.SOD.executeOrDelayUntilScriptLoaded(function () {
+            var SLASH = "/";
+            var tp1 = new String(window.location.protocol);
+            var tp2 = new String(window.location.host);
+            var tp3 = L_Menu_BaseUrl;
+            var site = tp1 + SLASH + SLASH + tp2 + tp3;
+            SP.SOD.registerSod('CEWP_Dashboard_AllDashboards_Button.js', site + "/SiteAssets/js/CEWP_Dashboard_AllDashboards_Button.js");
+            EnsureScriptFunc("CEWP_Dashboard_AllDashboards_Button.js", null, function () {
+                CKO.DASHBOARD.CHARTS.Authority().Init(site, 'M');
+            });
+        }, "sp.js");
+    });
+</script>-->
+
+<div id="PMTDashboardDataAnalysis_Button">
+    <!--<a href='#' class='btn btn-default' id='AllDashboardsButton' onclick='CKO.DASHBOARDS.ALLDASHBOARDS.AllDashboards_Button().SelectFilters(this);'>Detailed Analysis Dashboard</a>-->
+
+    <a input type="button" href='/sites/OCKO/PMT/Pages/PMTDashboardDataAnalysis.aspx' class='btn btn-default' id='AllDashboardsButton'>PMT Dashboard Data Analysis in Excel</a>
+</div>

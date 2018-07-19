@@ -1,0 +1,23 @@
+﻿<script language="javascript" type="text/javascript">
+    jQuery(document).ready(function () {
+        SP.SOD.executeOrDelayUntilScriptLoaded(function () {
+            var SLASH = "/";
+            var tp1 = new String(window.location.protocol);
+            var tp2 = new String(window.location.host);
+            var tp3 = L_Menu_BaseUrl;
+            var site = tp1 + SLASH + SLASH + tp2 + tp3;
+            SP.SOD.registerSod('CEWP_Dashboard_Directives2.js', site + "/SiteAssets/js/CEWP_Dashboard_Directives2.js");
+            EnsureScriptFunc("CEWP_Dashboard_Directives2.js", null, function () 
+   			 {
+                CKO.DASHBOARD.Directives2().Init(site);
+            });
+        }, "sp.js");
+    });
+</script>
+
+<div id="Directives">
+    <table style="height:100%;width:100%;">
+        <tr><td align='center'><img src='/_layouts/images/gears_an.gif' /></td></tr>
+        <tr><td align='center'><div style='margin-top: 10px; font-size: 16px;'>Getting Data...Please wait.</div></td></tr>
+    </table>
+</div>

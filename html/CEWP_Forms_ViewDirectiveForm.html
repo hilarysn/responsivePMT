@@ -1,0 +1,223 @@
+﻿<style type="text/css">
+    .hidden { display: none; }
+    #tblActions { min-width: 100%; }
+    .thUser, .tdUser { width: 25%; }
+    .thDate, .tdDate { width: 15%; }
+    .thHours, .tdHours { width: 10%; }
+    .thComment, .tdComment { width: 50%; }
+</style>
+
+<script language="javascript" type="text/javascript">
+    SP.SOD.executeOrDelayUntilScriptLoaded(function () {
+        var SLASH = "/";
+        var tp1 = new String(window.location.protocol);
+        var tp2 = new String(window.location.host);
+        var tp3 = L_Menu_BaseUrl;
+        var site = tp1 + SLASH + SLASH + tp2 + tp3;
+        SP.SOD.registerSod('CEWP_Forms_ViewDirectiveForm.js', site + "/SiteAssets/js/CEWP_Forms_ViewDirectiveForm.js");
+        EnsureScriptFunc("CEWP_Forms_ViewDirectiveForm.js", null, function () {
+            CKO.FORMS.DIRECTIVES.ViewForm().Init(site);
+        });
+    }, "sp.js");
+</script>
+
+<div data-role="form" style="display:none">
+    <div class="container-fluid" id="ViewForm">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="active directivetab"><a href="#tabMain" role="tab" data-toggle="tab">Main</a></li>
+            <li class="directivetab"><a href="#tabOrg" role="tab" data-toggle="tab">Staff/Orgs</a></li>
+            <li class="directivetab"><a href="#tabActions" role="tab" data-toggle="tab">Actions</a></li>
+            <li class="directivetab"><a href="#tabCustomer" role="tab" data-toggle="tab">Customer Data</a></li>
+            <li class="directivetab"><a href="#tabInfo" role="tab" data-toggle="tab">Additional Info</a></li>
+            <li class="directivetab"><a href="#tabSkills" role="tab" data-toggle="tab">Skills</a></li>
+            <li class="directivetab"><a href="#tabPhases" role="tab" data-toggle="tab">Phases</a></li>
+        </ul>
+        <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active fade in" id="tabMain">
+                <div class="container-fluid">
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Directive</label>
+                            <div class="col-sm-10 control-field">
+                                <div class="datafield" data-field="Directive"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Description</label>
+                            <div class="col-sm-10 control-field">
+                                <div class="datafield" data-field="DirectiveDescription"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Lead Comments</label>
+                            <div class="col-sm-10 control-filed">
+                                <div class="datafield" data-field="Lead Comments"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Team Comments</label>
+                            <div class="col-sm-10 control-field">
+                                <div class="datafield" data-field="TeamComments"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Status</label>
+                            <label class="col-sm-3 control-label">Manned</label>
+                            <label class="col-sm-3 control-label">Equipped</label>
+                            <label class="col-sm-3 control-label">Trained</label>
+                            <div class="col-sm-3 control-field"><div class="datafield" data-field="DirectiveStatus"></div></div>
+                            <div class="col-sm-3 control-field"><div class="datafield" data-field="Manned"></div></div>
+                            <div class="col-sm-3 control-field"><div class="datafield" data-field="Equipped"></div></div>
+                            <div class="col-sm-3 control-field"><div class="datafield" data-field="Trained"></div></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">AvailableManHours</label>
+                            <label class="col-sm-3 control-label">ProjectedManHours</label>
+                            <label class="col-sm-3 control-label">Expended</label>
+                            <label class="col-sm-3 control-label">PercentExpended</label>
+                            <div class="col-sm-3 control-field"><div class="datafield" data-field="AvailableManHours"></div> </div>
+                            <div class="col-sm-3 control-field"><div class="datafield" data-field="ProjectedManHours"></div> </div>
+                            <div class="col-sm-3 control-field"><div class="datafield" data-field="Expended"></div> </div>
+                            <div class="col-sm-3 control-field"><div class="datafield" data-field="PercentExpended"></div> </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Start Date</label>
+                            <label class="col-sm-3 control-label">Suspense Date</label>
+                            <label class="col-sm-3 control-label">Date Completed</label>
+                            <label class="col-sm-3 control-label">Report Required</label>
+                            <div class="col-sm-3 control-field"><div class="datafield" data-field="Start Date"></div> </div>
+                            <div class="col-sm-3 control-field"><div class="datafield" data-field="SuspenseDate"></div> </div>
+                            <div class="col-sm-3 control-field"><div class="datafield" data-field="Date Completed"></div> </div>
+                            <div class="col-sm-3 control-field"><div class="datafield" data-field="ReportRequired"></div> </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">MOEQualitative</label>
+                            <label class="col-sm-6 control-label">MOEQuantitative</label>
+                            <div class="col-sm-6 control-field"><div class="datafield" data-field="MOEQualitative"></div></div>
+                            <div class="col-sm-6 control-field"><div class="datafield" data-field="MOEQuantitative"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="tabOrg">
+                <div class="container-fluid">
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Staff Lead</label>
+                            <div class="col-sm-10 control-field">
+                                <div class="datafield" data-field="StaffLead"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Staff Assist</label>
+                            <div class="col-sm-10 control-field">
+                                <div class="datafield" data-field="StaffAssist"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Lead Assessment</label>
+                            <div class="col-sm-10 control-field">
+                                <div class="datafield" data-field="LeadAssessment"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">Source Authority</label>
+                            <label class="col-sm-6 control-label">Source Reference</label>
+                            <div class="col-sm-6 control-field"><div class="datafield" data-field="SourceAuthority"></div></div>
+                            <div class="col-sm-6 control-field"><div class="datafield" data-field="SourceReference"></div></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Supported Org</label>
+                            <label class="col-sm-4 control-label">Supported Sub Org</label>
+                            <label class="col-sm-4 control-label">Supported Other Org</label>
+                            <div class="col-sm-4 control-field"><div class="datafield" data-field="SupportedOrg"></div></div>
+                            <div class="col-sm-4 control-field"><div class="datafield" data-field="SupportedSubOrg"></div></div>
+                            <div class="col-sm-4 control-field"><div class="datafield" data-field="SupportedOtherOrg"></div></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Supporting Org</label>
+                            <label class="col-sm-4 control-label">Support Reference</label>
+                            <label class="col-sm-4 control-label">Support Paragraph</label>
+                            <div class="col-sm-4 control-field"><div class="datafield" data-field="SupportingOrg"></div></div>
+                            <div class="col-sm-4 control-field"><div class="datafield" data-field="SupportReference"></div></div>
+                            <div class="col-sm-4 control-field"><div class="datafield" data-field="SupportParagraph"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="tabActions"></div>
+            <div role="tabpanel" class="tab-pane" id="tabCustomer">
+                <div class="container-fluid">
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Customer Org</label>
+                            <div class="col-sm-10">
+                                <div class="datafield" data-field="CustomerOrg"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Customer POC</label>
+                            <div class="col-sm-10">
+                                <div class="datafield" data-field="CustomerPOC"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Customer MoE</label>
+                            <div class="col-sm-10">
+                                <div class="datafield" data-field="CustomerMoE"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">Customer MoP</label>
+                            <div class="col-sm-10">
+                                <div class="datafield" data-field="CustomerMoP"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="tabInfo">
+                <div class="container-fluid">
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-1 control-label">Additional Information Link</label>
+                            <div class="col-sm-11"><div class="datafield" data-field="AdditionalInformation"></div></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">Affect on Value </label>
+                            <label class="col-sm-6 control-label">Value</label>
+                            <div class="col-sm-6"><div class="datafield" data-field="AffectOnValue"></div></div>
+                            <div class="col-sm-6"><div class="datafield" data-field="Value"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="tabSkills">
+                <div class="container-fluid">
+                    <table class="table table-striped table-bordered table-hover" id="tblSkills">
+                        <thead>
+                            <tr>
+                                <th class="thskill">Skill</th>
+                                <th class="thhours">Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tblSkillsBody"></tbody>
+                        <tfoot>
+                            <tr class="info">
+                                <td class="tdlabeltotal">Total</td>
+                                <td class="tdhourtotal" id="skilltotal"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="tabPhases">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div id="Phases"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
