@@ -112,32 +112,33 @@ CKO.FORMS.DIRECTIVES.NewForm = function () {
                 }
             });
 
-            // allow user to add skills. this is a new form and will not initially have any skills but will need to have ability to add multiple skills
-            // Enable click function to add skill. This will open the form for adding a skill
+             //Allow user to add skills. this is a new form and will not initially have any skills but will need to have ability to add multiple skills
+             //Enable click function to add skill. This will open the form for adding a skill
+             //Users cannot baseline skills until the directive has a parent ID and existing skills
 
-            //$("#btnAddSkill").click(function (e) {
-            //    e.preventDefault();
-            //    v.directive = String($("input[title='Directive Required Field']").val());
-            //    logit("ADD SKILL DIRECTIVE: " + v.directive);
-            //    if (v.directive.length > 5) {
-            //        //var zurl = fixurl('/Lists/DirectiveSkills/NewForm.aspx?Directive=' + v.directive + '&Action=EditForm&IsDlg=1');
-            //        var zurl = fixurl('/Lists/DirectiveSkills/NewForm.aspx?DirectiveID=' + v.directiveid + '&Action=EditForm&IsDlg=1');
-            //        CKODialog(zurl, 'Add Skill', '800', '500', 'NotificationCallback');
-            //    }
-            //    else {
-            //        alert("You must have a directive name already filled out.");
-            //    }
-            //});
+            $("#btnAddSkill").click(function (e) {
+                e.preventDefault();
+                v.directive = String($("input[title='Directive Required Field']").val());
+                logit("ADD SKILL DIRECTIVE: " + v.directive);
+                if (v.directive.length > 5) {
+                    //var zurl = fixurl('/Lists/DirectiveSkills/NewForm.aspx?Directive=' + v.directive + '&Action=EditForm&IsDlg=1');
+                    var zurl = fixurl('/Lists/DirectiveSkills/NewForm.aspx?DirectiveID=' + v.directiveid + '&Action=EditForm&IsDlg=1');
+                    CKODialog(zurl, 'Add Skill', '800', '500', 'NotificationCallback');
+                }
+                else {
+                    alert("You must have a directive name already filled out.");
+                }
+            });
         });
     }
 
-    /*function GetSkills() {
+    function GetSkills() {
         logit("GetSkills Called");
         v.hours = 0;
         v.html = "";
         v.directive = String($("input[title='Directive Required Field']").val());
-        // Load the Skills for this Directive on the Skills tab in a table
-        // Managed Metadata not really supported by REST so using CSOM here
+         //Load the Skills for this Directive on the Skills tab in a table
+         //Managed Metadata not really supported by REST so using CSOM here
 
         var inc = "Include(";
         var xml = "<View><Method Name='Read List' /><Query><OrderBy><FieldRef Name='Hours' /></OrderBy><Where><Eq><FieldRef Name='Directive' /><Value Type='Text'>" + v.directive + "</Value></Eq></Where></Query>";
@@ -195,7 +196,7 @@ CKO.FORMS.DIRECTIVES.NewForm = function () {
         }, function (sender, args) {
             logit("Error getting data from DirectiveSkills list : " + args.get_message());
         });
-    }*/
+    }
 
     function LoadDropdowns() {
         var deferreds = [];
@@ -479,18 +480,18 @@ CKO.FORMS.DIRECTIVES.NewForm = function () {
         SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.cancel);
     }
 
-    //function DeleteSkillSucceeded() {
-    //    SP.UI.Notify.addNotification("Skill Deleted.", false);
-    //    GetSkills();
-    //}
+    function DeleteSkillSucceeded() {
+        SP.UI.Notify.addNotification("Skill Deleted.", false);
+        GetSkills();
+    }
 
-    //function DeleteSkillFailed(sender, args) {
-    //    logit(args.get_message());
-    //}
+    function DeleteSkillFailed(sender, args) {
+        logit(args.get_message());
+    }
 
     return {
         Init: Init,
-        //GetSkills: GetSkills,
+        GetSkills: GetSkills,
         changeme: changeme
     }
 }
