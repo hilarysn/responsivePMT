@@ -1,10 +1,27 @@
 ﻿<style type="text/css">
-    .hidden { display: none; }
-    #tblActions { min-width: 100%; }
-    .thUser, .tdUser { width: 25%; }
-    .thDate, .tdDate { width: 15%; }
-    .thHours, .tdHours { width: 10%; }
-    .thComment, .tdComment { width: 50%; }
+    .hidden {
+        display: none;
+    }
+
+    #tblActions {
+        min-width: 100%;
+    }
+
+    .thUser, .tdUser {
+        width: 25%;
+    }
+
+    .thDate, .tdDate {
+        width: 15%;
+    }
+
+    .thHours, .tdHours {
+        width: 10%;
+    }
+
+    .thComment, .tdComment {
+        width: 50%;
+    }
 </style>
 
 <script language="javascript" type="text/javascript">
@@ -30,7 +47,6 @@
             <li class="directivetab"><a href="#tabCustomer" role="tab" data-toggle="tab">Customer Data</a></li>
             <li class="directivetab"><a href="#tabInfo" role="tab" data-toggle="tab">Additional Info</a></li>
             <li class="directivetab"><a href="#tabSkills" role="tab" data-toggle="tab">Skills</a></li>
-            <li class="directivetab"><a href="#tabPhases" role="tab" data-toggle="tab">Phases</a></li>
         </ul>
         <div class="row">
             <div class="tab-content">
@@ -188,9 +204,9 @@
                                 <div class="col-sm-11"><div data-field="AdditionalInformation"></div></div>
                             </div>
                             <div class="form-group">
-                                <label class="col-sm-6 control-label">Affect on Value </label>
+                                <label class="col-sm-6 control-label">Effect on Value </label>
                                 <label class="col-sm-6 control-label">Value</label>
-                                <div class="col-sm-6"><div data-field="AffectOnValue"></div></div>
+                                <div class="col-sm-6"><div data-field="EffectOnValue"></div></div>
                                 <div class="col-sm-6"><div data-field="Value"></div></div>
                             </div>
                         </div>
@@ -220,35 +236,37 @@
                                 </tr>
                             </tfoot>
                         </table>
-                    </div>
-                </div>
-                <div role="tabpanel" class="tab-pane" id="tabPhases">
-                    <div class="container-fluid">
-                        <table class="table table-striped table-bordered table-hover" id="tblPhases">
+                        <table class="table table-striped table-bordered table-hover" id="tblSkillsBaseline">
                             <thead>
                                 <tr>
-                                    <th class="thskill">Phase</th>
-                                    <th class="thhours">StartDate</th>
-                                    <th class="thhours">EndDate</th>
+                                    <th class="thbaseline">Baseline Date</th>
+                                    <th class="thtotalprojectedhours" id="totalprojectedhours">Total Projected Hours</th>
+                                    <td class="thtotalexpendedhours" id="totalexpendedhours">Total Expended Hours</td>
                                 </tr>
                             </thead>
-                            <tbody id="tblPhasesBody"></tbody>
+                            <tbody id="tblSkillsBaselineBody"></tbody>
                             <tfoot>
-                                <tr class="info">
-                                    <td colspan="2" class="tdlabelgantt">Gantt</td>
-                                    <td class="tdhourtotal" id="phasesgantt"></td>
-                                </tr>
                                 <tr>
                                     <td colspan="2" class="tdspacer"></td>
                                     <td class="tdbuttons">
-                                        <input type="button" class="btn btn-success" value="Add Phase" id="btnAddPhase" />
+                                        <input type="button" class="btn btn-success" value="Add Baseline" id="btnAddBaseline" />
+                                    </td>
+                                    <td class="tdbuttons">
+                                        <input type="button" class="btn btn-success" value="Delete Baseline" id="btnDeleteBaseline" />
                                     </td>
                                 </tr>
                             </tfoot>
                         </table>
                     </div>
                 </div>
-            </div><!-- -- -->>
+                <div role="tabpanel" class="tab-pane" id="tabPhases">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div id="Phases"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="row">
             <div class="form-group">

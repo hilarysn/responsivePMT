@@ -5,6 +5,7 @@
     .thDate, .tdDate { width: 15%; }
     .thHours, .tdHours { width: 10%; }
     .thComment, .tdComment { width: 50%; }
+    .navbar-inverse { display: none; }
 </style>
 
 <script language="javascript" type="text/javascript">
@@ -14,14 +15,14 @@
         var tp2 = new String(window.location.host);
         var tp3 = L_Menu_BaseUrl;
         var site = tp1 + SLASH + SLASH + tp2 + tp3;
-        SP.SOD.registerSod('CEWP_Forms_ViewDirectiveForm.js', site + "/SiteAssets/js/CEWP_Forms_ViewDirectiveForm.js");
-        EnsureScriptFunc("CEWP_Forms_ViewDirectiveForm.js", null, function () {
+        SP.SOD.registerSod('CEWP_Forms_ViewDirectiveForm2.js', site + "/SiteAssets/js/CEWP_Forms_ViewDirectiveForm2.js");
+        EnsureScriptFunc("CEWP_Forms_ViewDirectiveForm2.js", null, function () {
             CKO.FORMS.DIRECTIVES.ViewForm().Init(site);
         });
     }, "sp.js");
 </script>
 
-<div data-role="form" style="display:none">
+<div data-role="form">
     <div class="container-fluid" id="ViewForm">
         <ul class="nav nav-tabs" role="tablist">
             <li class="active directivetab"><a href="#tabMain" role="tab" data-toggle="tab">Main</a></li>
@@ -186,7 +187,7 @@
                         <div class="form-group">
                             <label class="col-sm-6 control-label">Effect on Value </label>
                             <label class="col-sm-6 control-label">Value</label>
-                            <div class="col-sm-6"><div class="datafield" data-field="EffectOnValue"></div></div>
+                            <div class="col-sm-6"><div class="datafield" data-field="AffectOnValue"></div></div>
                             <div class="col-sm-6"><div class="datafield" data-field="Value"></div></div>
                         </div>
                     </div>
@@ -208,16 +209,6 @@
                                 <td class="tdhourtotal" id="skilltotal"></td>
                             </tr>
                         </tfoot>
-                    </table>
-                    <table class="table table-striped table-bordered table-hover" id="tblSkillsBaseline">
-                        <thead>
-                            <tr>
-                                <th class="thbaseline">Baseline Date</th>
-                                <th class="thtotalprojectedhours" id="totalprojectedhours">Total Projected Hours</th>
-                                <td class="thtotalexpendedhours" id="totalexpendedhours">Total Expended Hours</td>
-                            </tr>
-                        </thead>
-                        <tbody id="tblSkillsBaselineBody"></tbody>
                     </table>
                 </div>
             </div>
