@@ -15,19 +15,24 @@ CKO.FORMS.DIRECTIVES.VARIABLES = {
     list: null,
     listitem: null,
     id: null,
-    html: "",
+    parentid: null,
+    html: "",   //
+    html2: "",  //
+    html3: "",  //
+    items: [],//
+    total: 0,  //
+    count: 0,  //
     tblinit: 0,
     user: null,
     userID: null,
     //Org: null,
+    hours: 0, //don't use
+    baselinedate: null,          //
+    skillsexpendedhours: null,   //
+    projectedhours: null,   // 
     directive: null,
-    baselinedate: null,
-    totalexpectedhours: null,    
-    totalexpendedhours: null,
-    parentid: null,
     directiveid: "DIR" + jQuery.QueryString["ID"],
     titlechanged: false,
-    hours: 0,
     selects: null,
     alignmentrequired: true,
     actiondate: jQuery.QueryString["Date"]
@@ -54,16 +59,30 @@ CKO.FORMS.DIRECTIVES.EditForm= function () {
         v.site = site;
         resizeModalDialog();
         loadCSS(site + '/SiteAssets/css/CEWP_Forms_DirectiveForms.css');
-        //loadCSS(site + '/SiteAssets/css/jquery.dataTables.min.css');
-        //loadscript(site + '/SiteAssets/js/jquery.dataTables.min.js', function () {
-            //loadscript(site + '/SiteAssets/js/dataTables.bootstrap.min.js', function () {
+        loadCSS(site + '/SiteAssets/css/responsive.bootstrap.min.css');
+        loadscript(site + '/SiteAssets/js/jquery.dataTables.min.js', function () {
+            loadscript(site + '/SiteAssets/js/dataTables.bootstrap.min.js', function () {
                 LoadData();
-            //});
-        //});
+            });
+        });
     }
 
     function LoadData() {
         resizeModalDialog(); // just to be sure!!
+        // hsn 7/16/18
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            var target = $(e.target).attr("href"); // activated tab
+            if (target === "#tabPhases") {
+                //var h = $("#ViewForm").height() - 50 + "px";
+                var h = "500px";
+                var w = $("#ViewForm").width() - 10 + "px";
+                logit("w: " + w + ", h: " + h);
+                $("#Phases").css({ height: h }, { width: w });
+                GetPhases();
+            }
+        });
+        // end hsn
+         
         v.directive = $("input[title*='Directive']").val();
         v.title = v.directive;
         logit("Directive=" + v.directive);
@@ -142,33 +161,13 @@ CKO.FORMS.DIRECTIVES.EditForm= function () {
                 }
             });
 
-            // allow user to add skills. this is an edit form and will need to have ability to add multiple skills
-            // Enable click function to add skill. This will open the form for adding a skill
-            GetSkills(v.directiveid);
-            $("#btnAddSkill").click(function (e) {
-                e.preventDefault();
-                var zurl = fixurl('/Lists/DirectiveSkills/NewForm.aspx?DirectiveID=' + v.directiveid + '&Action=EditForm&IsDlg=1');
-                CKODialog(zurl, 'Add Skill', '800', '500', 'NotificationCallback');
-                //v.directive = String($("input[title='Directive Required Field']").val());
-                //logit("ADD SKILL DIRECTIVE: " + v.directive);
-                //if (v.directive.length > 5) {
-                //    var zurl = fixurl('/Lists/DirectiveSkills/NewForm.aspx?Directive=' + v.directive + '&Action=EditForm&IsDlg=1');
-                //    var zurl = fixurl('/Lists/DirectiveSkills/NewForm.aspx?DirectiveID=' + v.directiveid + '&Action=EditForm&IsDlg=1');
-                //    CKODialog(zurl, 'Add Skill', '800', '500', 'NotificationCallback');
-                //}
-                //else {
-                //    alert("You must have a directive name already filled out.");
-                //}
-            });
-
-            var rabbit = Cascade();
-            jQuery.when.apply(null, rabbit).done(function () {
-                // Load the Actions for this Directive on the Actions tab in a table
+            var rabbit = Cascade(); 
+            //below = GetActions();
+            jQuery.when.apply(null, rabbit).done(function () { // Load the Actions for this Directive in a table on the Actions tab                
                 var urlString = v.site + "/_vti_bin/listdata.svc/Actions?";
                 urlString += "$select=Id,Title,EffortTypeValue,DateCompleted,PMTUser,Expended,ActionComments,ParentID";
                 urlString += "&$expand=PMTUser";
                 urlString += "&$orderby=DateCompleted desc";
-                //urlString += "&$filter=(substringof('" + v.directive + "', Title)) and (EffortTypeValue eq 'Directive')";
                 urlString += "&$filter=(ParentID eq '" + v.directiveid + "')";
                 logit("urlString: " + urlString);
 
@@ -184,239 +183,317 @@ CKO.FORMS.DIRECTIVES.EditForm= function () {
                         var results = data.d.results;
                         var j = jQuery.parseJSON(JSON.stringify(results));
                         var numitems = data.d.results.length;
-                        logit("Actions Count: " + numitems);
+                        logit("Current Actions Count: " + numitems);
+                        v.skillsexpendedhours = 0;
+                        v.items = [];
+                        //Build array to hold the current and archived actions for this directive
                         if (numitems > 0) {
-                            // Build out the table to show the actions for this directive.
-                            v.html = "<table id='tblActions' cellspacing='0' cellpadding='0' class='table table-bordered table-hover' style='width: 100%;'>";
-                            v.html += "<thead><tr><th class='thUser'>User</th><th class='thDate'>Date</th><th class='thHours'>Hours</th><th class='thComment'>Comment</th></tr></thead>";
-                            v.html += "<tbody>";
                             for (var i = 0; i < j.length; i++) {
-                                v.html += "<tr>";
-                                v.html += "<td class='tdUser'>" + j[i]["PMTUser"]["Name"] + "</td>";
-                                var a = moment(j[i]["DateCompleted"]).add(8, 'hours'); // adding 8 hours because the rest endpoint is subtracting the timezone offset
-                                v.html += "<td class='tdDate'>" + a.format("DD-MMM-YY") + "</td>";
-                                v.html += "<td class='tdHours'>" + j[i]["Expended"] + "</td>";
-                                v.html += "<td class='tdComment'>" + j[i]["ActionComments"] + "</td>";
-                                v.html += "</tr>";
+                                v.skillsexpendedhours += j[i]["Expended"];//for baselines
+                                v.parentid = j[i]["ParentID"] //sets v.parentid correctly. STOP worrying about it!
+                                v.items.push({
+                                    "User": j[i]["PMTUser"]["Name"],
+                                    "Date": j[i]["DateCompleted"],
+                                    "Hours": j[i]["Expended"],
+                                    "Comment": j[i]["ActionComments"]
+                                });
                             }
-                            v.html += "</tbody></table>";
-                            $("#tabActions").html("").append(v.html);
                         }
 
-                        logit("Update Dropdowns complete.");
-                        //var table = $("#tblActions").dataTable({
-                        //    "scrollY": "500px",
-                        //    "scrollCollapse": true,
-                        //    "paging": false,
-                        //    "searching": false,
-                        //    "ordering": false
-                        //});
+                        GetArchivedActions(); // totals for second skills table
 
-                        //setTimeout(function () {
-                        //    //table.columns.adjust().draw();
-                        //    $(".thDate").click();
-                        //    //$(".thDate").click();
-                        //}, 4000);
+                        function GetArchivedActions() {
+                            logit("GetArchivedeActions Called");
+                            v.html2 = "";
+                            // 1. Get total number of hours currently expended for the directive from the Actions 
+                            //    list and the ArchivedActions list --> Display Total Hours Expended (v.expendedhours)
+                            // 2. Get current total of estimated skill hours (projected hours) from DirectiveSkills list 
+                            // 3. Write second row   td 1 v.hours   td 2 v.skillsexpendedhours
+
+                            var urlString = v.site + "/_vti_bin/listdata.svc/ArchivedActions?";
+                            urlString += "$select=Id,PMTUser,Expended,ParentID";
+                            urlString += "&$expand=PMTUser";
+                            urlString += "&$filter=(ParentID eq '" + v.parentid + "')";
+                            logit("Archived Actions urlString: " + urlString);
+
+                            jQuery.ajax({
+                                url: urlString,
+                                method: "GET",
+                                headers: { 'accept': 'application/json; odata=verbose' },
+                                error: function (jqXHR, textStatus, errorThrown) {
+                                    //to do implement logging to a central list
+                                    logit("Error Status: " + textStatus + ":: errorThrown: " + errorThrown);
+                                },
+                                success: function (data) {
+                                    var results = data.d.results;
+                                    var j = jQuery.parseJSON(JSON.stringify(results));
+                                    var numitems = data.d.results.length;
+                                    logit("Archived Actions Count: " + numitems);
+                                    if (numitems > 0) {
+                                        for (var i = 0; i < j.length; i++) {
+                                            v.archivedexpendedhours += j[i]["Expended"];
+                                            v.items.push({
+                                                "User": j[i]["PMTUser"]["Name"],
+                                                "Date": j[i]["DateCompleted"],
+                                                "Hours": j[i]["Expended"],
+                                                "Comment": j[i]["ActionComments"]
+                                            });
+                                        }
+                                    }
+
+                                    BuildSkillsActionsTable(); //first skills table
+                                    function BuildSkillsActionsTable() {
+                                        // Build table showing both the current and archived actions for this directive. 
+                                        // NOT DONE
+                                        var j = v.items;
+                                        v.html = "<table id='tblActions' cellspacing='0' cellpadding='0' class='table table-bordered table-hover' style='width: 100%;'>";
+                                        v.html += "<thead><tr><th class='thUser'>User</th><th class='thDate'>Date</th><th class='thHours'>Hours</th><th class='thComment'>Comment</th></tr></thead>";
+                                        v.html += "<tbody>";
+                                        for (var i = 0; i < j.length; i++) {
+                                            v.html += "<tr>";
+                                            v.html += "<td class='tdUser'>" + j[i]["User"] + "</td>";
+                                            var a = moment(j[i]["Date"]).add(8, 'hours'); // adding 8 hours because the rest endpoint is subtracting the timezone offset
+                                            v.html += "<td class='tdDate'>" + a.format("DD-MMM-YY") + "</td>";
+                                            v.html += "<td class='tdHours'>" + j[i]["Hours"] + "</td>";
+                                            v.html += "<td class='tdComment'>" + j[i]["Comment"] + "</td>";
+                                            v.html += "</tr>";
+                                        }
+                                        v.html += "</tbody></table>";
+                                        $("#tabActions").html("").append(v.html);
+                                    }
+
+                                    logit("v.skillsexpendedhours: " + v.skillsexpendedhours);
+
+                                    //Enable click function to add multiple skills. Opens the DirectiveSkills list edit form.
+                                    GetSkills();
+                                    $("#btnAddSkill").click(function (e) {
+                                        e.preventDefault();
+                                        var zurl = fixurl('/Lists/DirectiveSkills/NewForm.aspx?DirectiveID=' + v.directiveid + '&Action=EditForm&IsDlg=1');
+                                        CKODialog(zurl, 'Add Skill', '800', '500', 'NotificationCallback');
+                                    });
+                                }
+                            });
+                        }
                     }
                 });
-            });
-        });
-    }
 
-    function GetSkills(parentid) {
-        if (parentid === null) {
-            parentid = v.directiveid;
-            v.parentid = parentid;
-        }
-
-        v.parentid = parentid;
-        logit("GetSkills Called: ParentID - " + parentid);
-        v.html = "";
-        v.hours = 0;
-        //v.directive = String($("input[title='Directive Required Field']").val());
-        // Load the Skills for this Directive on the Skills tab in a table
-        // Managed Metadata not really supported by REST so using CSOM here
-
-        var inc = "Include(";
-        var xml = "<View><Method Name='Read List' /><Query><OrderBy><FieldRef Name='Hours' /></OrderBy><Where><Eq><FieldRef Name='ParentID' /><Value Type='Text'>" + parentid + "</Value></Eq></Where></Query>";
-        var fields = ["Directive", "Skill", "Hours", "ParentID"];
-        xml += "<ViewFields>";
-        for (var z = 0; z <= fields.length - 1; z++) {
-            xml += "<FieldRef Name='" + fields[z] + "'/>";
-            if (z === fields.length - 1) {
-                inc += fields[z] + ")";
-            }
-            else {
-                inc += fields[z] + ", ";
-            }
-        }
-        xml += "<FieldRef Name='ID'/>";
-        xml += "</ViewFields>";
-        xml += "</View>";
-
-        $.when(CKO.CSOM.GetListItems.getitemsfilteredcomplex("current", "DirectiveSkills", xml, inc)).then(function (items) {
-            if (items.get_count() > 0) { //get map data
-                enumerator = items.getEnumerator();
-                while (enumerator.moveNext()) {
-                    var prop = enumerator.get_current();
-                    var hours = parseInt(prop.get_item("Hours"));
-                    var skill = prop.get_item("Skill");
-                    skill = skill.split("|");
-                    v.html += "<tr>";
-                    v.html += "<td><button type='button' data-id='" + prop.get_id() + "' class='btn btn-success btnedit'>Edit</button>";
-                    v.html += "<button type='button' data-id='" + prop.get_id() + "' class='btn btn-danger btndelete'>Delete</button></td>";
-                    v.html += "<td>" + skill[0] + "</td>";
-                    v.html += "<td class='tdHours'>" + prop.get_item("Hours") + "</td>";
-                    v.hours += hours;
-                    v.totalexpectedhours = v.hours; // for baseline
-                    v.html += "</tr>";
-                }
-                $("#tblSkillsBody").html("").append(v.html);
-                $("#skilltotal").html("").append(v.hours);
-
-                $(".btnedit").on("click", function () {
-                    var id = $(this).attr("data-id");
-                    var zurl = fixurl('/Lists/DirectiveSkills/EditForm.aspx?ID=' + id + '&Action=EditForm&IsDlg=1');
-                    CKODialog(zurl, 'Edit Skill', '800', '500', 'NotificationCallback');
-                });
-
-                $(".btndelete").on("click", function () {
-                    v.id = $(this).attr("data-id");
-                    v.ctx = new SP.ClientContext.get_current();
-                    v.list = v.ctx.get_web().get_lists().getByTitle("DirectiveSkills");
-                    v.id = v.id.trim();
-                    v.id = parseInt(v.id);
-                    v.listItem = v.list.getItemById(v.id);
-                    v.listItem.deleteObject();
-                    v.ctx.executeQueryAsync(DeleteSkillSucceeded, DeleteSkillFailed);
-                });
-            }
-        }, function (sender, args) {
-            logit("Error getting data from DirectiveSkills list : " + args.get_message());
-        });
-    }
-
-    function GetSkillsBaseline(parentid) {
-        if (v.totalexpectedhours !== null) {
-            parentid = v.directiveid; 
-        } else {
-            logit("GetSkillsBaselineCalled: ParentID - " + parentid);
-            v.html = "";
-            //v.hours = 0; use v.hours for baseline
-            //v.directive = String($("input[title='Directive Required Field']").val());
-            // Load the baselines for this Directive on the Skills tab in a table
-            // Managed Metadata not really supported by REST so using CSOM here
-
-            var inc = "Include(";
-            var xml = "<View><Method Name='Read List' /><Query><OrderBy><FieldRef Name='Hours' /></OrderBy><Where><Eq><FieldRef Name='ParentID' /><Value Type='Text'>" + parentid + "</Value></Eq></Where></Query>";
-            var fields = ["Directive", "BaselineDate", "TotalExpectedHours", "TotalExpendedHours", "ParentID"];
-            xml += "<ViewFields>";
-            for (var z = 0; z <= fields.length - 1; z++) {
-                xml += "<FieldRef Name='" + fields[z] + "'/>";
-                if (z === fields.length - 1) {
-                    inc += fields[z] + ")";
-                }
-                else {
-                    inc += fields[z] + ", ";
-                }
-            }
-            xml += "<FieldRef Name='ID'/>";
-            xml += "</ViewFields>";
-            xml += "</View>";
-
-            $.when(CKO.CSOM.GetListItems.getitemsfilteredcomplex("current", "DirectiveSkillsBaseline", xml, inc)).then(function (items) {
-                if (items.get_count() > 0) { //get map data
-                    enumerator = items.getEnumerator();
-                    while (enumerator.moveNext()) {
-                        var prop = enumerator.get_current();
-                        var baselinedate = prop.get_item("BaselineDate"); //check how to read field
-                        var expectedhours = parseInt(prop.get_item("TotalProjectedHours"));
-                        var expendedhours = parseInt(prop.get_item("TotalExpendedHours"));
-                        v.html += "<tr>";
-                        v.html += "<td><button type='button' data-id='" + prop.get_id() + "' class='btn btn-success btnedit'>Edit</button>";
-                        v.html += "<button type='button' data-id='" + prop.get_id() + "' class='btn btn-danger btndelete'>Delete</button></td>";
-                        v.html += "<td>" + BaselineDate[0] + "</td>";
-                        v.html += "<td class='tdHours'>" + TotalProjectedHours[0] + "</td>";
-                        v.html += "<td class='tdHours'>" + TotalExpendedHours[0] + "</td>";
-                        v.html += "</tr>";
+                function GetSkills() {
+                    if (v.parentid === null) {
+                        v.parentid = v.directiveid;
                     }
-                    //$("#tblSkillsBody").html("").append(v.html);
-                    //$("#totalexpendedhours").html("").append(v.hours);
+                    v.html = "";
+                    v.hours = 0;
+                    logit("GetSkills Called for ParentID: " + v.parentid);
 
-                    //$(".btnedit").on("click", function () {
-                    //    var id = $(this).attr("data-id");
-                    //    var zurl = fixurl('/Lists/DirectiveSkillsBaselines/EditForm.aspx?ID=' + id + '&Action=EditForm&IsDlg=1');
-                    //    CKODialog(zurl, 'Edit Baseline', '800', '500', 'NotificationCallback');
-                    //});
+                    // Identify the directive, then display the Estimated Skills and hours for the Directive on the Skills tab
+                    // in the Estimated Skills and Hours table - ID = tblSkills
+                    // Managed Metadata not really supported by REST so using CSOM here
 
-                    $("#btnDeleteBaseline").click(function (e) {
-                        e.preventDefault();
-                        v.id = $(this).attr("data-id");
-                        v.ctx = new SP.ClientContext.get_current();
-                        v.list = v.ctx.get_web().get_lists().getByTitle("DirectiveSkillsBaseline");
-                        v.id = v.id.trim();
-                        v.id = parseInt(v.id);
-                        v.listItem = v.list.getItemById(v.id);
-                        v.listItem.deleteObject();
-                        v.ctx.executeQueryAsync(DeleteSkillSucceeded, DeleteSkillFailed);
-                    });
-
-                    //allow user to add skills baseline. 
-                    //This only works if there are existing skills to baseline
-                    //Enable click function to add skills baseline. This will open the form for adding a skills baseline.
-
-                    $("#btnAddBaseline").click(function (e) {
-                        e.preventDefault();
-                        v.directiveid = String($("input[title='Directive Required Field']").val());
-                        v.parentid = String($("input[title='ParentID']").val());
-                        v.hours = Int($("input[title='TotalExpendedHours']").val());
-                        v.totalexpectedhours = Int($("input[title='TotalExpectededHours']").val());
-                        // //moment.today = Date($("input[title='BaselineDate']").val());
-                        v.baselinedate = Date($("input[title='BaselineDate=" + moment.today + "]").val()); // not this total of skills hours entered
-                        logit("ADD Baseline: " + v.directiveid + v.totalexpectedhours + "on" + v.baselinedate);
-                        if (v.parentid.length > 5) {
-                            var zurl = fixurl('/Lists/DirectiveSkillsBaselines/NewForm.aspx?ParentID=' + v.parentid + '&Action=EditForm&IsDlg=1');
-                            //var zurl = fixurl('/Lists/DirectiveSkillsBaselines/EditForm.aspx?DirectiveID=' + v.directive  id + '&Action=EditForm&IsDlg=1');
-                            CKODialog(zurl, 'Add Baseline', '800', '500', 'NotificationCallback');
+                    var inc = "Include(";
+                    var xml = "<View><Method Name='Read List' /><Query><OrderBy><FieldRef Name='Hours' /></OrderBy><Where><Eq><FieldRef Name='ParentID' /><Value Type='Text'>" + v.parentid + "</Value></Eq></Where></Query>";
+                    var fields = ["Directive", "Skill", "Hours", "ParentID"];
+                    xml += "<ViewFields>";
+                    for (var z = 0; z <= fields.length - 1; z++) {
+                        xml += "<FieldRef Name='" + fields[z] + "'/>";
+                        if (z === fields.length - 1) {
+                            inc += fields[z] + ")";
                         }
                         else {
-                            alert("The directive must have skills and hours entered before you save a baseline.");
+                            inc += fields[z] + ", ";
                         }
+                    }
+                    xml += "<FieldRef Name='ID'/>";
+                    xml += "</ViewFields>";
+                    xml += "</View>";
+
+                    $.when(CKO.CSOM.GetListItems.getitemsfilteredcomplex("current", "DirectiveSkills", xml, inc)).then(function (items) {
+                        if (items.get_count() > 0) { //get map data
+                            enumerator = items.getEnumerator();
+                            v.hours = 0;
+                            v.projectedhours = 0;
+                            while (enumerator.moveNext()) {
+                                var prop = enumerator.get_current();
+                                var hours = parseInt(prop.get_item("Hours"));
+                                var skill = prop.get_item("Skill");
+                                skill = skill.split("|");
+                                v.html += "<tr>";
+                                v.html += "<td><button type='button' data-id='" + prop.get_id() + "' class='btn btn-success btnedit'>Edit</button>";
+                                v.html += "<button type='button' data-id='" + prop.get_id() + "' class='btn btn-danger btndelete'>Delete</button></td>";
+                                v.html += "<td>" + skill[0] + "</td>";
+                                v.html += "<td class='tdHours'>" + prop.get_item("Hours") + "</td>";
+                                v.hours += hours;
+                                v.html += "</tr>";
+                            }
+                            $("#tblSkillsBody").html("").append(v.html);
+                            $("#skilltotal").html("").append(v.hours);
+                            v.projectedhours = v.hours; //for baselines
+
+                            $(".btnEditSkill").on("click", function () {
+                                var id = $(this).attr("data-id");
+                                var zurl = fixurl('/Lists/DirectiveSkills/EditForm.aspx?ID=' + id + '&Action=EditForm&IsDlg=1');
+                                CKODialog(zurl, 'Edit Skill', '800', '500', 'NotificationCallback');
+                            });
+
+                            $(".btnDeleteSkill").on("click", function () {
+                                v.id = $(this).attr("data-id");
+                                v.ctx = new SP.ClientContext.get_current();
+                                v.list = v.ctx.get_web().get_lists().getByTitle("DirectiveSkills");
+                                v.id = v.id.trim();
+                                v.id = parseInt(v.id);
+                                v.listItem = v.list.getItemById(v.id);
+                                v.listItem.deleteObject();
+                                v.ctx.executeQueryAsync(DeleteSkillSucceeded, DeleteSkillFailed);
+                            });
+
+                            //build skills tab table 2
+                            v.html2 += "<tr class='info'>";
+                            v.html2 += "<td class='tdblank'>" + "" + "</td>";
+                            v.html2 += "<td class='tdlabeltotal'>" + v.projectedhours + "</td>";//Total Projected Hours
+                            v.html2 += "<td class='tdhourtotal'>" + v.skillsexpendedhours + "</td>";  //Total Expended Hours
+                            v.html2 += "</tr>";
+                            $("#tblCurrentTotalsFoot").html("").append(v.html2);
+                            logit("Get Archived Actions complete.");
+
+                            GetBaselines();
+                            // Enable click function to add a baseline.
+                            $("#btnAddBaseline").click(function (e) {
+                                e.preventDefault();
+                                v.items = [];
+                                var baselinedate = moment().add(8, 'hours').format("MM-DD-YYYY"); // adding 8 hours because the rest endpoint is subtracting the timezone offset
+                                v.items.push({
+                                    "ParentID": v.parentid,
+                                    "BaselineDate": baselinedate,
+                                    "TotalProjectedHours": v.projectedhours,
+                                    "TotalExpendedHours": v.skillsexpendedhours
+                                });
+                                AddItem(v.items[0]);
+                            });
+
+                            //Add a baseline
+                            function AddItem(itemProperties) {
+                                return $.ajax({
+                                    type: 'POST',
+                                    url: "https://hq.tradoc.army.mil/sites/OCKO/PMT/_vti_bin/listdata.svc/DirectiveSkillsBaselines",
+                                    contentType: 'application/json',
+                                    processData: false,
+                                    headers: {
+                                        "Accept": "application/json;odata=verbose"
+                                    },
+                                    data: JSON.stringify(itemProperties)
+                                });
+                            }
+
+                            function AddItemSucceeded() {
+                                v.count += 1;
+                                if (v.count === v.total) {
+                                    alert("Baseline added");
+                                    $("#SPSTools_Notify").fadeOut("2500", function () {
+                                        $("#SPSTools_Notify").html("");
+                                    });
+                                }
+                                GetBaselines();
+                            }
+
+                            function AddItemFail(jqXHR, textStatus, errorThrown) {
+                                v.count += 1;
+                                if (v.count === v.total) {
+                                    alert("add baseline failed");
+                                    $("#SPSTools_Notify").fadeOut("2500", function () {
+                                        $("#SPSTools_Notify").html("");
+                                    });
+                                } else {
+                                    console.log("Add baseline failed: " + errorThrown);
+                                }
+                            }
+                        }
+
+                    }, function (sender, args) {
+                        logit("Error getting data from DirectiveSkills list : " + args.get_message());
                     });
 
-                    //$("#btnAddBaseline").click(function (e) {
-                    //    e.preventDefault();
-                    //    var zurl = fixurl('/Lists/DirectiveSkillsBaselines/NewForm.aspx?DirectiveID=' + v.parentID + '&Action=EditForm&IsDlg=1');
-                    //    CKODialog(zurl, 'Add Baseline', '800', '500', 'NotificationCallback');
-                    //    v.directive = String($("input[title='Directive Required Field']").val());
-                    //    v.parentid = String($("input[title='ParentID']").val());
-                    //    v.hours = Int($("input[title='TotalExpendedHours']").val());
-                    //    v.expectedhours = Int($("input[title='TotalExpectededHours']").val());
-                    //    moment.today = Date($("input[title='BaselineDate']").val());
-                    //    logit("ADD DIRECTIVE Baseline: " + v.totalexpectedhours + "on" + v.baselinedate);
-                    //    //if (v.directive.length > 5) {
-                    //    //    var zurl = fixurl('/Lists/DirectiveSkillsBaselines/NewForm.aspx?Directive=' + v.directive + '&Action=EditForm&IsDlg=1');
-                    //    //    var zurl = fixurl('/Lists/DirectiveSkillsBaselines/NewForm.aspx?DirectiveID=' + v.parentid + '&Action=EditForm&IsDlg=1');
-                    //    //    CKODialog(zurl, 'Add Baseline', '800', '500', 'NotificationCallback');
-                    //    //}
-                    //    //else {
-                    //    //    alert("You must have a directive name already filled out.");
-                    //    //}
-                    //});
-                }
-            }, function (sender, args) {
-                logit("Error getting data from DirectiveSkills list : " + args.get_message());
-            });
-        }
-    }
+                    function GetBaselines() {
+                        logit("GetBaselines Called");
+                        v.html3 = "";
+                        var numitems = 0;
+                        // 1. Get the directives's baseline data from DirectiveSkillsBaselines: ParentID, BaselineDate, TotalProjectedHours, TotalExpendedHours
+                        // 2. Write baseline date, total projected hours, total expended hours to baselines table
+                        var urlString = v.site + "/_vti_bin/listdata.svc/DirectiveSkillsBaselines?";
+                        urlString += "$select=Id,ParentID,BaselineDate,TotalProjectedHours,TotalExpendedHours";
+                        urlString += "&$filter=(ParentID eq '" + v.parentid + "')";
+                        logit("DirectiveSkillsBaselines urlString: " + urlString);
 
-    function LoadDropdowns() {
-        var deferreds = [];
-        deferreds.push($.when(CKO.CSOM.GetLookupData.getvalues("current", "PMTOrgs", "Title")).then(function (items) { CKO.CSOM.FillDropdowns(items, "Title", ["ddSupportingOrg"]); }, function (sender, args) { logit("GetLookupData Failed 1, " + args.get_message()); }));
-        deferreds.push($.when(CKO.CSOM.GetLookupData.getvalues("current", "Alignment", "Title")).then(function (items) { CKO.CSOM.FillDropdowns(items, "Title", ["ddSourceAuthority"]); }, function (sender, args) { logit("GetLookupData Failed 2, " + args.get_message()); }));
-        deferreds.push($.when(CKO.CSOM.GetLookupData.getvalues("current", "Orgs", "Title")).then(function (items) { CKO.CSOM.FillDropdowns(items, "Title", ["ddSupportedOrg"]); }, function (sender, args) { logit("GetLookupData Failed 3, " + args.get_message()); }));
-        deferreds.push($.when(CKO.CSOM.GetLookupData.getvalues("current", "Alignments", "Reference")).then(function (items) { CKO.CSOM.FillDropdowns(items, "Reference", ["ddSupportReference"]); }, function (sender, args) { logit("GetLookupData Failed 4, " + args.get_message()); }));
-        return deferreds;
+                        jQuery.ajax({
+                        url: urlString,
+                        method: "GET",
+                        headers: { 'accept': 'application/json; odata=verbose' },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            //to do implement logging to a central list
+                            logit("Error Status: " + textStatus + ":: errorThrown: " + errorThrown);
+                            },
+                            success: function (data) {
+                            var results = data.d.results;
+                            var j = jQuery.parseJSON(JSON.stringify(results));
+                            numitems = data.d.results.length;
+                            logit("Baselines Count: " + numitems);
+                                if (numitems > 0) {
+                                    for (var i = 0; i < numitems; i++) {
+                                        v.html3 += "<tr>";
+                                        v.html3 += "<td><button type='button' data-id='" + j[i]["Id"] + "' class='btn btn-danger btnDeleteBaseline'>Delete</button></td>";
+                                        var a = moment(j[i]["BaselineDate"]).add(8, 'hours'); // adding 8 hours because the rest endpoint is subtracting the timezone offset
+                                        v.html3 += "<td class='tdDate'>" + a.format("DD-MMM-YY") + "</td>";
+                                        v.html3 += "<td class='tdHours'>" + j[i]["TotalProjectedHours"] + "</td>";
+                                        v.html3 += "<td class='tdHours'>" + j[i]["TotalExpendedHours"] + "</td>";
+                                        v.html3 += "</tr>";
+                                    }
+                                }
+
+                                v.html3 += "</tbody></table>";
+                                $("#tblSkillsBaselineBody").html("").append(v.html3);
+
+                                //Enable click function to delete a baseline.
+                                $(".btnDeleteBaseline").on('click', function (e) {
+                                    e.preventDefault();
+                                    DeleteBaseline($(this).attr("data-id")).success(DeleteBaselineSucceeded).fail(DeleteBaselineFail);
+                                });
+
+                                function DeleteBaseline(id) {
+                                    return $.ajax({
+                                        type: 'DELETE',
+                                        url: "https://hq.tradoc.army.mil/sites/OCKO/PMT/_vti_bin/listdata.svc/DirectiveSkillsBaselines(" + id + ")",
+                                        contentType: 'application/json',
+                                        processData: false,
+                                        headers: {
+                                            "Accept": "application/json;odata=verbose"
+                                        }
+                                    });
+                                }
+
+                                function DeleteBaselineSucceeded() {
+                                    alert("Baseline deleted");
+                                    GetBaselines();
+                                }
+
+                                function DeleteBaselineFail(jqXHR, textStatus, errorThrown) {
+                                    v.count += 1;
+                                    if (v.count === v.total) {
+                                        alert("delete item failed");
+                                        $("#SPSTools_Notify").fadeOut("2500", function () {
+                                            $("#SPSTools_Notify").html("");
+                                        });
+                                    } else {
+                                        console.log("Delete baseline failed: " + errorThrown);
+                                    }
+                                }
+                            }
+
+                        }, function (sender, args) {
+                            logit("Error getting data from DirectiveSkillsBaselines list : " + args.get_message());
+                        });
+                    }
+                }
+                logit("Update Dropdowns complete.");
+            });
+        });
     }
 
     function Cascade() {
@@ -493,65 +570,230 @@ CKO.FORMS.DIRECTIVES.EditForm= function () {
         return deferreds;
     }
 
+    function LoadDropdowns() {
+        var deferreds = [];
+        deferreds.push($.when(CKO.CSOM.GetLookupData.getvalues("current", "PMTOrgs", "Title")).then(function (items) { CKO.CSOM.FillDropdowns(items, "Title", ["ddSupportingOrg"]); }, function (sender, args) { logit("GetLookupData Failed 1, " + args.get_message()); }));
+        deferreds.push($.when(CKO.CSOM.GetLookupData.getvalues("current", "Alignment", "Title")).then(function (items) { CKO.CSOM.FillDropdowns(items, "Title", ["ddSourceAuthority"]); }, function (sender, args) { logit("GetLookupData Failed 2, " + args.get_message()); }));
+        deferreds.push($.when(CKO.CSOM.GetLookupData.getvalues("current", "Orgs", "Title")).then(function (items) { CKO.CSOM.FillDropdowns(items, "Title", ["ddSupportedOrg"]); }, function (sender, args) { logit("GetLookupData Failed 3, " + args.get_message()); }));
+        deferreds.push($.when(CKO.CSOM.GetLookupData.getvalues("current", "Alignments", "Reference")).then(function (items) { CKO.CSOM.FillDropdowns(items, "Reference", ["ddSupportReference"]); }, function (sender, args) { logit("GetLookupData Failed 4, " + args.get_message()); }));
+        return deferreds;
+    }
+
+    function GetPhases() {
+        logit("Get Phases Called");
+        var demo_tasks = {
+            data: [
+                { "id": 1, "text": "Office itinerancy", "type": 'gantt.config.types.project', "order": "10", progress: 0.4, open: false },
+                { "id": 2, "text": "Office facing", "type": 'gantt.config.types.project', "start_date": "02-04-2018", "duration": "8", "order": "10", progress: 0.6, "parent": "1", open: true },
+                { "id": 3, "text": "Furniture installation", "type": 'gantt.config.types.project', "start_date": "11-04-2018", "duration": "8", "order": "20", "parent": "1", progress: 0.6, open: true },
+                { "id": 4, "text": "The employee relocation", "type": 'gantt.config.types.project', "start_date": "13-04-2018", "duration": "6", "order": "30", "parent": "1", progress: 0.5, open: true },
+                { "id": 5, "text": "Interior office", "start_date": "02-04-2018", "duration": "7", "order": "3", "parent": "2", progress: 0.6, open: true },
+                { "id": 6, "text": "Air conditioners check", "start_date": "03-04-2018", "duration": "7", "order": "3", "parent": "2", progress: 0.6, open: true },
+                { "id": 7, "text": "Workplaces preparation", "start_date": "11-04-2018", "duration": "8", "order": "3", "parent": "3", progress: 0.6, open: true },
+                { "id": 8, "text": "Preparing workplaces", "start_date": "14-04-2018", "duration": "5", "order": "3", "parent": "4", progress: 0.5, open: true },
+                { "id": 9, "text": "Workplaces importation", "start_date": "14-04-2018", "duration": "4", "order": "3", "parent": "4", progress: 0.5, open: true },
+                { "id": 10, "text": "Workplaces exportation", "start_date": "14-04-2018", "duration": "3", "order": "3", "parent": "4", progress: 0.5, open: true },
+                { "id": 11, "text": "Product launch", "type": 'gantt.config.types.project', "order": "5", progress: 0.6, open: true },
+                { "id": 12, "text": "Perform Initial testing", "start_date": "03-04-2018", "duration": "5", "order": "3", "parent": "11", progress: 1, open: true },
+                { "id": 13, "text": "Development", "type": 'gantt.config.types.project', "start_date": "02-04-2018", "duration": "7", "order": "3", "parent": "11", progress: 0.5, open: true },
+                { "id": 14, "text": "Analysis", "start_date": "02-04-2018", "duration": "6", "order": "3", "parent": "11", progress: 0.8, open: true },
+                { "id": 15, "text": "Design", "type": 'gantt.config.types.project', "start_date": "02-04-2018", "duration": "5", "order": "3", "parent": "11", progress: 0.2, open: false },
+                { "id": 16, "text": "Documentation creation", "start_date": "02-04-2018", "duration": "7", "order": "3", "parent": "11", progress: 0, open: true },
+                { "id": 17, "text": "Develop System", "start_date": "03-04-2018", "duration": "2", "order": "3", "parent": "13", progress: 1, open: true },
+                { "id": 25, "text": "Beta Release", "start_date": "06-04-2018", "order": "3", "type": 'gantt.config.types.milestone', "parent": "13", progress: 0, open: true },
+                { "id": 18, "text": "Integrate System", "start_date": "08-04-2018", "duration": "2", "order": "3", "parent": "13", progress: 0.8, open: true },
+                { "id": 19, "text": "Test", "start_date": "10-04-2018", "duration": "4", "order": "3", "parent": "13", progress: 0.2, open: true },
+                { "id": 20, "text": "Marketing", "start_date": "10-04-2018", "duration": "4", "order": "3", "parent": "13", progress: 0, open: true },
+                { "id": 21, "text": "Design database", "start_date": "03-04-2018", "duration": "4", "order": "3", "parent": "15", progress: 0.5, open: true },
+                { "id": 22, "text": "Software design", "start_date": "03-04-2018", "duration": "4", "order": "3", "parent": "15", progress: 0.1, open: true },
+                { "id": 23, "text": "Interface setup", "start_date": "03-04-2018", "duration": "5", "order": "3", "parent": "15", progress: 0, open: true },
+                { "id": 24, "text": "Release v1.0", "start_date": "15-04-2018", "order": "3", "type": 'gantt.config.types.milestone', "parent": "11", progress: 0, open: true }
+            ],
+            links: [
+                { id: "1", source: "1", target: "2", type: "1" },
+
+                { id: "2", source: "2", target: "3", type: "0" },
+                { id: "3", source: "3", target: "4", type: "0" },
+                { id: "4", source: "2", target: "5", type: "2" },
+                { id: "5", source: "2", target: "6", type: "2" },
+                { id: "6", source: "3", target: "7", type: "2" },
+                { id: "7", source: "4", target: "8", type: "2" },
+                { id: "8", source: "4", target: "9", type: "2" },
+                { id: "9", source: "4", target: "10", type: "2" },
+
+                { id: "10", source: "11", target: "12", type: "1" },
+                { id: "11", source: "11", target: "13", type: "1" },
+                { id: "12", source: "11", target: "14", type: "1" },
+                { id: "13", source: "11", target: "15", type: "1" },
+                { id: "14", source: "11", target: "16", type: "1" },
+
+                { id: "15", source: "13", target: "17", type: "1" },
+                { id: "16", source: "17", target: "25", type: "0" },
+                { id: "23", source: "25", target: "18", type: "0" },
+                { id: "17", source: "18", target: "19", type: "0" },
+                { id: "18", source: "19", target: "20", type: "0" },
+                { id: "19", source: "15", target: "21", type: "2" },
+                { id: "20", source: "15", target: "22", type: "2" },
+                { id: "21", source: "15", target: "23", type: "2" },
+                { id: "22", source: "13", target: "24", type: "0" }
+            ]
+        };
+
+        var getListItemHTML = function (type, count, active) {
+            return '<li' + (active ? ' class="active"' : '') + '><a href="#">' + type + 's <span class="badge">' + count + '</span></a></li>';
+        };
+
+        var updateInfo = function () {
+            var state = gantt.getState();
+            var tasks = gantt.getTaskByTime(state.min_date, state.max_date);
+            var types = gantt.config.types;
+            var result = {};
+            var html = "";
+            var active = false;
+
+            // get available types
+            for (var t in types) {
+                result[types[t]] = 0;
+            }
+
+            // sort tasks by type
+            for (var i = 0, l = tasks.length; i < l; i++) {
+                if (tasks[i].type && result[tasks[i].type] !== "undefined")
+                    result[tasks[i].type] += 1;
+                else
+                    result[types.task] += 1;
+            }
+
+            // render list items for each type
+            for (var j in result) {
+                if (j === types.task) {
+                    active = true;
+                }
+
+                else {
+                    active = false;
+                }
+
+                html += getListItemHTML(j, result[j], active);
+            }
+            document.getElementById("gantt_info").innerHTML = html;
+        };
+
+        gantt.templates.scale_cell_class = function (date) {
+            if (date.getDay() === 0 || date.getDay() === 6) {
+                return "weekend";
+            }
+        };
+
+        gantt.templates.task_cell_class = function (item, date) {
+            if (date.getDay() === 0 || date.getDay() === 6) {
+                return "weekend";
+            }
+        };
+
+        gantt.templates.rightside_text = function (start, end, task) {
+            if (task.type === gantt.config.types.milestone) {
+                return task.text;
+            }
+            return "";
+        };
+
+        gantt.config.columns = [
+            {
+                name: "text", label: "Task name", width: "*", tree: true
+            },
+            {
+                name: "start_time", label: "Start time", template: function (obj) {
+                    return gantt.templates.date_grid(obj.start_date);
+                }, align: "center", width: 60
+            },
+            {
+                name: "duration", label: "Duration", align: "center", width: 60
+            },
+            {
+                name: "add", label: "", width: 44
+            }
+        ];
+
+        gantt.config.grid_width = 390;
+        gantt.config.date_grid = "%F %d";
+        gantt.config.scale_height = 60;
+        gantt.config.subscales = [
+            { unit: "month", step: 1, date: "Month #%M" }
+        ];
+
+        gantt.attachEvent("onAfterTaskAdd", function (id, item) {
+            updateInfo();
+        });
+
+        gantt.attachEvent("onAfterTaskDelete", function (id, item) {
+            updateInfo();
+        });
+
+        gantt.init("Phases"); //div name
+        gantt.parse(demo_tasks);   //json series data
+        //updateInfo();       //limit to edit and new forms
+    }
+    
     function changeme(obj) {
         var f = $("#" + obj.id).attr("data-function");
         logit("Change called on: " + obj.id + ", function: " + f);
         switch (f) {
             case "cascadeselect":
-                // loop through the selects array and then do another query and update of the values. Then update the source value to the changed select value( this is the hidden form field)
-                for (var i = 0; i < v.selects.length; i++) {
-                    if (v.selects[i].id === obj.id) {
-                        // this is the changed select update the source value and get the new items
-                        v.selects[i].sourceval = $("#" + obj.id + " option:selected").val();
-                        $("input[title*='" + $("#" + obj.id).attr("data-sourcefield") + "']").val(v.selects[i].sourceval);
-                        if (v.selects[i].fields !== null) {
-                            $.when(CKO.CSOM.GetListItems.getitemsfilteredorderedandpassfieldstoelement("current", v.selects[i].list, v.selects[i].filter, v.selects[i].sourceval, v.selects[i].orderby, i, v.selects[i].fields)).then(function (items, i) {
-                                if (items.get_count() > 0) {
-                                    v.selects[i].items = items;
-                                    var opts = "<option selected value='Select...'>Select...</option>";
-                                    var enumerator = items.getEnumerator();
-                                    var unique = "";
-                                    var text;
-                                    while (enumerator.moveNext()) {
-                                        var current = enumerator.get_current();
-                                        for (var z = 0; z < v.selects[i].fields.length; z++) {
-                                            if (z === 0) {
-                                                text = current.get_item(v.selects[i].fields[z]);
-                                            }
-                                            else {
-                                                text += "-" + current.get_item(v.selects[i].fields[z]);
-                                            }
+            // loop through the selects array and then do another query and update of the values. Then update the source value to the changed select value( this is the hidden form field)
+            for (var i = 0; i < v.selects.length; i++) {
+                if (v.selects[i].id === obj.id) {
+                    // this is the changed select update the source value and get the new items
+                    v.selects[i].sourceval = $("#" + obj.id + " option:selected").val();
+                    $("input[title*='" + $("#" + obj.id).attr("data-sourcefield") + "']").val(v.selects[i].sourceval);
+                    if (v.selects[i].fields !== null) {
+                        $.when(CKO.CSOM.GetListItems.getitemsfilteredorderedandpassfieldstoelement("current", v.selects[i].list, v.selects[i].filter, v.selects[i].sourceval, v.selects[i].orderby, i, v.selects[i].fields)).then(function (items, i) {
+                            if (items.get_count() > 0) {
+                                v.selects[i].items = items;
+                                var opts = "<option selected value='Select...'>Select...</option>";
+                                var enumerator = items.getEnumerator();
+                                var unique = "";
+                                var text;
+                                while (enumerator.moveNext()) {
+                                    var current = enumerator.get_current();
+                                    for (var z = 0; z < v.selects[i].fields.length; z++) {
+                                        if (z === 0) {
+                                            text = current.get_item(v.selects[i].fields[z]);
                                         }
-                                        opts += "<option value='" + current.get_item(v.selects[i].orderby) + "'>" + text + "</option>";
+                                        else {
+                                            text += "-" + current.get_item(v.selects[i].fields[z]);
+                                        }
                                     }
-                                    // populate the child select with the options
-                                    $("#" + v.selects[i].cascadeto).html("").append(opts);
+                                    opts += "<option value='" + current.get_item(v.selects[i].orderby) + "'>" + text + "</option>";
                                 }
-                            }, function (sender, args) {
-                                logit("Error getting data for child dropdown: " + args.get_message());
-                            });
-                        }
-                        else {
-                            $.when(CKO.CSOM.GetListItems.getitemsfilteredorderedandpasstoelement("current", v.selects[i].list, v.selects[i].filter, v.selects[i].sourceval, v.selects[i].orderby, i)).then(function (items, i) {
-                                if (items.get_count() > 0) {
-                                    v.selects[i].items = items;
-                                    var opts = "<option selected value='Select...'>Select...</option>";
-                                    var enumerator = items.getEnumerator();
-                                    var unique = "";
-                                    while (enumerator.moveNext()) {
-                                        var current = enumerator.get_current();
-                                        opts += "<option value='" + current.get_item(v.selects[i].orderby) + "'>" + current.get_item(v.selects[i].orderby) + "</option>";
-                                    }
-                                    // populate the child select with the options
-                                    $("#" + v.selects[i].cascadeto).html("").append(opts);
+                                // populate the child select with the options
+                                $("#" + v.selects[i].cascadeto).html("").append(opts);
+                            }
+                        }, function (sender, args) {
+                            logit("Error getting data for child dropdown: " + args.get_message());
+                        });
+                    }
+                    else {
+                        $.when(CKO.CSOM.GetListItems.getitemsfilteredorderedandpasstoelement("current", v.selects[i].list, v.selects[i].filter, v.selects[i].sourceval, v.selects[i].orderby, i)).then(function (items, i) {
+                            if (items.get_count() > 0) {
+                                v.selects[i].items = items;
+                                var opts = "<option selected value='Select...'>Select...</option>";
+                                var enumerator = items.getEnumerator();
+                                var unique = "";
+                                while (enumerator.moveNext()) {
+                                    var current = enumerator.get_current();
+                                    opts += "<option value='" + current.get_item(v.selects[i].orderby) + "'>" + current.get_item(v.selects[i].orderby) + "</option>";
                                 }
-                            }, function (sender, args) {
-                                logit("Error getting data for child dropdown: " + args.get_message());
-                            });
-                        }
+                                // populate the child select with the options
+                                $("#" + v.selects[i].cascadeto).html("").append(opts);
+                            }
+                        }, function (sender, args) {
+                            logit("Error getting data for child dropdown: " + args.get_message());
+                        });
                     }
                 }
-                break;
+            }
+            break;
 
             case "updatesource":
                 // update the source field with the selected value
@@ -568,8 +810,7 @@ CKO.FORMS.DIRECTIVES.EditForm= function () {
     function SaveAction() {
         // first validate if the title(directive) name has changed and ask the user if this is what they want to do. 
         // They will have to wait for all actions to be updated with the new title before it saves the changes.
-
-
+        
         $("#FormError").remove();
         $(".has-error").each(function () {
             $(this).removeClass("has-error");
@@ -706,7 +947,7 @@ CKO.FORMS.DIRECTIVES.EditForm= function () {
     function CancelAction() {
         SP.UI.ModalDialog.commonModalDialogClose(SP.UI.DialogResult.cancel);
     }
-
+    
     function DeleteSkillSucceeded() {
         SP.UI.Notify.addNotification("Skill Deleted.", false);
         GetSkills();
@@ -718,7 +959,8 @@ CKO.FORMS.DIRECTIVES.EditForm= function () {
 
     return {
         Init: Init,
-        GetSkills: GetSkills,
+        Cascade: Cascade,
+        GetPhases: GetPhases,
         changeme: changeme
     }
 }

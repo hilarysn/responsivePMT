@@ -209,12 +209,22 @@
                             </tr>
                         </tfoot>
                     </table>
+                    <table class="table table-striped table-bordered table-hover" id="tblCurrentTotals">
+                        <thead>
+                            <tr>
+                                <th class="thtoday">Today&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                                <th class="thcurrentprojectedhours">Current Projected Hours</th>
+                                <th class="thtotalexpendedhours">Total Expended Hours</th>
+                            </tr>
+                        </thead>
+                        <tfoot id="tblCurrentTotalsFoot"></tfoot>
+                    </table>
                     <table class="table table-striped table-bordered table-hover" id="tblSkillsBaseline">
                         <thead>
                             <tr>
-                                <th class="thbaseline">Baseline Date</th>
+                                <th class="thbaselinedate" id="baselinedate">Baseline Date</th>
                                 <th class="thtotalprojectedhours" id="totalprojectedhours">Total Projected Hours</th>
-                                <td class="thtotalexpendedhours" id="totalexpendedhours">Total Expended Hours</td>
+                                <th class="thtotalexpendedhours" id="totalexpendedhours">Total Expended Hours</th>
                             </tr>
                         </thead>
                         <tbody id="tblSkillsBaselineBody"></tbody>
