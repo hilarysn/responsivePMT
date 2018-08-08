@@ -15,8 +15,15 @@ CKO.FORMS.DIRECTIVES.VARIABLES = {
     html3: "",
     userID: null,
     hours: 0,
-    skillsexpendedhours: null,  //aka currenttotalhours for baseline
-    projectedhours: null,   // 
+
+    baselinedate: null,          //
+    skillsexpendedhours: null,   //
+    projectedhours: null,        // 
+
+    items: [], //
+    total: 0,  //
+    count: 0,  //
+
     directive: null
 };
 
@@ -127,7 +134,7 @@ CKO.FORMS.DIRECTIVES.ViewForm = function () {
             headers: { 'accept': 'application/json; odata=verbose' },
             error: function (jqXHR, textStatus, errorThrown) {
                 //to do implement logging to a central list
-                logit("Error Status: " + textStatus + ":: errorThrown: " + errorThrown);
+                logit("Error Status: " + textStatus + ": errorThrown: " + errorThrown);
             },
             success: function (data) {
                 var results = data.d.results;
@@ -135,169 +142,211 @@ CKO.FORMS.DIRECTIVES.ViewForm = function () {
                 var numitems = data.d.results.length;
                 logit("Actions Count: " + numitems);
                 if (numitems > 0) {
-                    // Build the table that shows the estimated skills used in this directive's actions.
                     v.skillsexpendedhours = 0;
-                    v.html = "<table id='tblActions' cellspacing='0' cellpadding='0' class='table table-bordered table-hover' style='width: 100%;'>";
-                    v.html += "<thead><tr><th class='thUser'>User</th><th class='thDate'>Date</th><th class='thHours'>Hours</th><th class='thComment'>Comment</th></tr></thead>";
-                    v.html += "<tbody>";
-                    for (var i = 0, length = j.length; i < length; i++) {
+
+                    //Build array to hold the current and archived actions for this directive
+                    if (numitems > 0) {
+                        for (var i = 0; i < j.length; i++) {
+                            v.skillsexpendedhours += j[i]["Expended"];//for baselines
+                            v.parentid = j[i]["ParentID"] //sets v.parentid correctly. STOP worrying about it!
+                            v.items.push({
+                                "User": j[i]["PMTUser"]["Name"],
+                                "Date": j[i]["DateCompleted"],
+                                "Hours": j[i]["Expended"],
+                                "Comment": j[i]["ActionComments"]
+                            });
+                        }
+                    }
+
+                    GetArchivedActions(); // totals for second skills table
+                }
+            }
+        })
+
+        function GetArchivedActions() {
+            logit("GetArchivedeActions Called");
+            v.html2 = "";
+            // 1. Get total number of hours currently expended for the directive from the Actions 
+            //    list and the ArchivedActions list --> Display Total Hours Expended (v.expendedhours)
+            // 2. Get current total of estimated skill hours (projected hours) from DirectiveSkills list 
+            // 3. Write second row   td 1 v.hours   td 2 v.skillsexpendedhours
+
+            var urlString = v.site + "/_vti_bin/listdata.svc/ArchivedActions?";
+            urlString += "$select=Id,PMTUser,Expended,ParentID";
+            urlString += "&$expand=PMTUser";
+            urlString += "&$filter=(ParentID eq '" + v.parentid + "')";
+            logit("Archived Actions urlString: " + urlString);
+
+            jQuery.ajax({
+                url: urlString,
+                method: "GET",
+                headers: { 'accept': 'application/json; odata=verbose' },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    //to do implement logging to a central list
+                    logit("Error Status: " + textStatus + ":: errorThrown: " + errorThrown);
+                },
+                success: function (data) {
+                    var results = data.d.results;
+                    var j = jQuery.parseJSON(JSON.stringify(results));
+                    var numitems = data.d.results.length;
+                    logit("Archived Actions Count: " + numitems);
+                    if (numitems > 0) {
+                        for (var i = 0; i < j.length; i++) {
+                            v.skillsexpendedhours += j[i]["Expended"];
+                            v.items.push({
+                                "User": j[i]["PMTUser"]["Name"],
+                                "Date": j[i]["DateCompleted"],
+                                "Hours": j[i]["Expended"],
+                                "Comment": j[i]["ActionComments"]
+                            });
+                        }
+                    }
+
+                    BuildActionsTable(); //first skills table
+                    function BuildActionsTable() {
+                        // Build table showing both the current and archived actions for this directive. 
+                        var j = v.items;
+
+                        v.html = "<table id='tblActions' cellspacing='0' cellpadding='0' class='table table-bordered table-hover' style='width: 100%;'>";
+                        v.html += "<thead><tr><th class='thUser'>User</th><th class='thDate'>Date</th><th class='thHours'>Hours</th><th class='thComment'>Comment</th></tr></thead>";
+                        v.html += "<tbody>";
+                        for (var i = 0; i < j.length; i++) {
+                            v.html += "<tr>";
+                            v.html += "<td class='tdUser'>" + j[i]["User"] + "</td>";
+                            var a = moment(j[i]["Date"]).add(8, 'hours'); // adding 8 hours because the rest endpoint is subtracting the timezone offset
+                            v.html += "<td class='tdDate'>" + a.format("DD-MMM-YY") + "</td>";
+                            v.html += "<td class='tdHours'>" + j[i]["Hours"] + "</td>";
+                            v.html += "<td class='tdComment'>" + j[i]["Comment"] + "</td>";
+                            v.html += "</tr>";
+                        }
+                        v.html += "</tbody></table>";
+                        $("#tabActions").html("").append(v.html);
+                    }
+
+                    GetSkills();
+
+                    logit("v.skillsexpendedhours: " + v.skillsexpendedhours);
+                }
+            });
+        }
+
+        $(".ms-descriptiontext").hide();
+
+        logit("Update Dropdowns complete.");
+
+        function GetSkills() {
+            if (v.parentid === null) {
+                v.parentid = v.directiveid;
+            }
+            v.html = "";
+            v.hours = 0;
+            logit("GetSkills Called for ParentID: " + v.parentid);
+
+            // v.directive = String($("input[title='Directive Required Field']").val());
+            // // Identify the directive, then display the Estimated Skills and hours for the Directive on the Skills tab
+            // // in the Estimated Skills and Hours table - ID = tblSkills
+
+            var inc = "Include(";
+            var xml = "<View><Method Name='Read List' /><Query><OrderBy><FieldRef Name='Hours' /></OrderBy><Where><Eq><FieldRef Name='ParentID' /><Value Type='Text'>" + v.directiveid + "</Value></Eq></Where></Query>";
+            var fields = ["Directive", "Skill", "Hours", "ParentID"];
+            xml += "<ViewFields>";
+            for (var z = 0; z <= fields.length - 1; z++) {
+                xml += "<FieldRef Name='" + fields[z] + "'/>";
+                if (z === fields.length - 1) {
+                    inc += fields[z] + ")";
+                }
+                else {
+                    inc += fields[z] + ", ";
+                }
+            }
+            xml += "<FieldRef Name='ID'/>";
+            xml += "</ViewFields>";
+            xml += "</View>";
+
+            $.when(CKO.CSOM.GetListItems.getitemsfilteredcomplex("current", "DirectiveSkills", xml, inc)).then(function (items) {
+                if (items.get_count() > 0) { //get map data
+                    enumerator = items.getEnumerator();
+                    v.hours = 0;
+                    while (enumerator.moveNext()) {
+                        var prop = enumerator.get_current();
+                        var hours = parseInt(prop.get_item("Hours"));
+                        var skill = prop.get_item("Skill");
+                        skill = skill.split("|");
                         v.html += "<tr>";
-                        v.html += "<td class='tdUser'>" + j[i]["PMTUser"]["Name"] + "</td>";
-                        var a = moment(j[i]["DateCompleted"]).add(8, 'hours'); // adding 8 hours because the rest endpoint is subtracting the timezone offset
-                        v.html += "<td class='tdDate'>" + a.format("DD-MMM-YY") + "</td>";
-                        v.html += "<td class='tdHours'>" + j[i]["Expended"] + "</td>";
-                        v.skillsexpendedhours += j[i]["Expended"];//for baselines
-                        v.html += "<td class='tdComment'>" + j[i]["ActionComments"] + "</td>";
+                        v.html += "<td>" + skill[0] + "</td>";
+                        v.html += "<td class='tdHours'>" + prop.get_item("Hours") + "</td>";
+                        v.hours += hours;
                         v.html += "</tr>";
                     }
-                    v.html += "</tbody></table>";
-                    $("#tabActions").html("").append(v.html);
+                    $("#tblSkillsBody").html("").append(v.html);
+                    $("#skilltotal").html("").append(v.hours);
+                    v.projectedhours = v.hours; //for baselines
+
+                    //build skills tab table 2
+                    v.html2 += "<tr class='info'>";
+                    v.html2 += "<td class='tdblank'>" + "" + "</td>";
+                    v.html2 += "<td class='tdlabeltotal'>" + v.projectedhours + "</td>";//Total Projected Hours
+                    v.html2 += "<td class='tdhourtotal'>" + v.skillsexpendedhours + "</td>";  //Total Expended Hours
+                    v.html2 += "</tr>";
+                    $("#tblCurrentTotalsFoot").html("").append(v.html2);
+                    logit("Get Archived Actions complete.");
+
+                    GetBaselines();
                 }
 
-                $(".ms-descriptiontext").hide();
+            }, function (sender, args) {
+                logit("Error getting data from DirectiveSkills list : " + args.get_message());
+            });
 
-                logit("Update Dropdowns complete.");
+            function GetBaselines() {
+                logit("GetBaselines Called");
+                v.html3 = "";
+                var numitems = 0;
+                var results = [];
+                var j = "";
+                var data = [];
+                //v.items = [];
+                // 1. Get the directives's baseline data from DirectiveSkillsBaselines: ParentID, BaselineDate, TotalProjectedHours, TotalExpendedHours
+                // 2. Write baseline date, total projected hours, total expended hours to baselines table
+                var urlString = v.site + "/_vti_bin/listdata.svc/DirectiveSkillsBaselines?";
+                urlString += "$select=Id,ParentID,BaselineDate,TotalProjectedHours,TotalExpendedHours";
+                urlString += "&$filter=(ParentID eq '" + v.parentid + "')";
+                logit("DirectiveSkillsBaselines urlString: " + urlString);
 
-                GetSkills();
-            }
-        });
-    }
+                jQuery.ajax({
+                    url: urlString,
+                    method: "GET",
+                    headers: { 'accept': 'application/json; odata=verbose' },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        //implements logging to a central list
+                        logit("Error Status: " + textStatus + ":: errorThrown: " + errorThrown);
+                    },
+                    success: function (data) {
+                        results = data.d.results;
+                        j = jQuery.parseJSON(JSON.stringify(results));
+                        numitems = data.d.results.length;
+                        logit("Baselines Count: " + numitems); 
+                        if (numitems > 0) {
+                            for (var i = 0; i < numitems; i++) {
+                                v.html3 += "<tr>";
+                                var a = moment(j[i]["BaselineDate"]).add(8, 'hours'); // adding 8 hours because the rest endpoint is subtracting the timezone offset
+                                v.html3 += "<td class='tdDate'>" + a.format("DD-MMM-YY") + "</td>";
+                                v.html3 += "<td class='tdHours'>" + j[i]["TotalProjectedHours"] + "</td>";
+                                v.html3 += "<td class='tdHours'>" + j[i]["TotalExpendedHours"] + "</td>";
+                                v.html3 += "</tr>";
+                            }
+                        }
 
-    function GetSkills() {
-        logit("GetSkills Called");
-        v.html = "";
-        // v.directive = String($("input[title='Directive Required Field']").val());
-        // // Identify the directive, then display the Estimated Skills and hours for the Directive on the Skills tab
-        // // in the Estimated Skills and Hours table - ID = tblSkills
+                        v.html3 += "</tbody></table>";
+                        $("#tblSkillsBaselineBody").html("").append(v.html3);                        
+                    }
 
-        var inc = "Include(";
-        var xml = "<View><Method Name='Read List' /><Query><OrderBy><FieldRef Name='Hours' /></OrderBy><Where><Eq><FieldRef Name='ParentID' /><Value Type='Text'>" + v.directiveid + "</Value></Eq></Where></Query>";
-        var fields = ["Directive", "Skill", "Hours", "ParentID"];
-        xml += "<ViewFields>";
-        for (var z = 0; z <= fields.length - 1; z++) {
-            xml += "<FieldRef Name='" + fields[z] + "'/>";
-            if (z === fields.length - 1) {
-                inc += fields[z] + ")";
-            }
-            else {
-                inc += fields[z] + ", ";
+                }, function (sender, args) {
+                    logit("Error getting data from DirectiveSkillsBaselines list : " + args.get_message());
+                });
             }
         }
-        xml += "<FieldRef Name='ID'/>";
-        xml += "</ViewFields>";
-        xml += "</View>";
-
-        $.when(CKO.CSOM.GetListItems.getitemsfilteredcomplex("current", "DirectiveSkills", xml, inc)).then(function (items) {
-            if (items.get_count() > 0) { //get map data
-                enumerator = items.getEnumerator();
-                v.hours = 0;
-                while (enumerator.moveNext()) {
-                    var prop = enumerator.get_current();
-                    var hours = parseInt(prop.get_item("Hours"));
-                    var skill = prop.get_item("Skill");
-                    skill = skill.split("|");
-                    v.html += "<tr>";
-                    v.html += "<td>" + skill[0] + "</td>";
-                    v.html += "<td class='tdHours'>" + prop.get_item("Hours") + "</td>";
-                    v.hours += hours;
-                    v.html += "</tr>";
-                }
-                $("#tblSkillsBody").html("").append(v.html);
-                $("#skilltotal").html("").append(v.hours);
-                v.projectedhours = v.hours; //for baselines
-            }
-
-            GetArchivedActions(); // second skills table
-            GetBaselines();       // third skills table
-
-        }, function (sender, args) {
-            logit("Error getting data from DirectiveSkills list : " + args.get_message());
-        });
-    }
-
-    function GetArchivedActions() {
-        logit("GetArchivedeActions Called");
-        v.html2 = "";
-        // 1. Get total number of hours currently expended for the directive from the Actions 
-        //    list and the ArchivedActions list --> Display Total Hours Expended (v.skillsexpendedhours)
-        // 2. Get current total of estimated skill hours (projected hours) from DirectiveSkills list 
-        // 3. Write second row   td 1 v.projectedhours   td 2 v.skillsexpendedhours
-
-        var urlString = v.site + "/_vti_bin/listdata.svc/ArchivedActions?";
-        urlString += "$select=Id,PMTUser,Expended,ParentID";
-        urlString += "&$expand=PMTUser";
-        urlString += "&$filter=(ParentID eq '" + v.directiveid + "')";
-        logit("Archived Actions urlString: " + urlString);
-
-        jQuery.ajax({
-            url: urlString,
-            method: "GET",
-            headers: { 'accept': 'application/json; odata=verbose' },
-            error: function (jqXHR, textStatus, errorThrown) {
-                //to do implement logging to a central list
-                logit("Error Status: " + textStatus + ":: errorThrown: " + errorThrown);
-            },
-            success: function (data) {
-                var results = data.d.results;
-                var j = jQuery.parseJSON(JSON.stringify(results));
-                var numitems = data.d.results.length;
-                logit("Actions Count: " + numitems);
-                if (numitems > 0) {
-                    for (var i = 0, length = j.length; i < length; i++) {
-                        v.skillsexpendedhours += j[i]["Expended"];
-                    }
-                }
-
-                v.html2 += "<tr class='info'>";
-                v.html2 += "<td class='tdblank'>" + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + "</td>";
-                v.html2 += "<td class='tdlabeltotal'>" + v.projectedhours + "</td>";//Total Projected Hours
-                v.html2 += "<td class='tdhourtotal'>" + v.skillsexpendedhours + "</td>";  //Total Expended Hours
-                v.html2 += "</tr>";
-                $("#tblCurrentTotalsFoot").html("").append(v.html2);
-                logit("Get Archived Actions complete.");
-            }
-        });
-    }
-
-    function GetBaselines() {
-        logit("GetBaselines Called");
-        v.html3 = "";
-        var numitems = 0;
-        // 1. Get the directives's baseline data from DirectiveSkillsBaselines: ParentID, BaselineDate, TotalProjectedHours, TotalExpendedHours
-        // 2. Write baseline date, total projected hours, total expended hours to baselines table
-        var urlString = v.site + "/_vti_bin/listdata.svc/DirectiveSkillsBaselines?";
-        urlString += "$select=Id,ParentID,BaselineDate,TotalProjectedHours,TotalExpendedHours";
-        urlString += "&$filter=(ParentID eq '" + v.directiveid + "')";
-        logit("DirectiveSkillsBaselines urlString: " + urlString);
-
-        jQuery.ajax({
-            url: urlString,
-            method: "GET",
-            headers: { 'accept': 'application/json; odata=verbose' },
-            error: function (jqXHR, textStatus, errorThrown) {
-                //to do implement logging to a central list
-                logit("Error Status: " + textStatus + ":: errorThrown: " + errorThrown);
-            },
-            success: function (data) {
-                var results = data.d.results;
-                var j = jQuery.parseJSON(JSON.stringify(results));
-                numitems = data.d.results.length;
-                logit("Baselines Count: " + numitems);
-                if (numitems > 0) {
-                    for (var i = 0, length = j.length; i < length; i++) {
-                        v.html3 += "<tr>";
-                        var a = moment(j[i]["BaselineDate"]).add(8, 'hours'); // adding 8 hours because the rest endpoint is subtracting the timezone offset
-                        v.html3 += "<td class='tdDate'>" + a.format("DD-MMM-YY") + "</td>";
-                        v.html3 += "<td class='tdHours'>" + j[i]["TotalProjectedHours"] + "</td>";
-                        v.html3 += "<td class='tdHours'>" + j[i]["TotalExpendedHours"] + "</td>";
-                        v.html3 += "</tr>";
-                    }
-                }
-                v.html += "</tbody></table>";
-                $("#tblSkillsBaselineBody").html("").append(v.html3);
-
-            }
-        });
+        logit("Update Dropdowns complete.");
     }
 
     function GetPhases() {
@@ -330,6 +379,7 @@ CKO.FORMS.DIRECTIVES.ViewForm = function () {
                 { "id": 23, "text": "Interface setup", "start_date": "03-04-2018", "duration": "5", "order": "3", "parent": "15", progress: 0, open: true },
                 { "id": 24, "text": "Release v1.0", "start_date": "15-04-2018", "order": "3", "type": 'gantt.config.types.milestone', "parent": "11", progress: 0, open: true }
             ],
+
             links: [
                 { id: "1", source: "1", target: "2", type: "1" },
 
@@ -457,7 +507,8 @@ CKO.FORMS.DIRECTIVES.ViewForm = function () {
     }
 
     return {
-        Init: Init
+        Init: Init,
+        GetPhases: GetPhases
     };
 };
 

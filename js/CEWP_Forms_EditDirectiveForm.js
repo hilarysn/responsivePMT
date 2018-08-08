@@ -19,7 +19,7 @@ CKO.FORMS.DIRECTIVES.VARIABLES = {
     html: "",   //
     html2: "",  //
     html3: "",  //
-    items: [],//
+    items: [], //
     total: 0,  //
     count: 0,  //
     tblinit: 0,
@@ -27,7 +27,6 @@ CKO.FORMS.DIRECTIVES.VARIABLES = {
     userID: null,
     //Org: null,
     hours: 0, //don't use
-    baselinedate: null,          //
     skillsexpendedhours: null,   //
     projectedhours: null,   // 
     directive: null,
@@ -162,8 +161,8 @@ CKO.FORMS.DIRECTIVES.EditForm= function () {
             });
 
             var rabbit = Cascade(); 
-            //below = GetActions();
-            jQuery.when.apply(null, rabbit).done(function () { // Load the Actions for this Directive in a table on the Actions tab                
+            // Load the Actions for this Directive in a table on the Actions tab
+            jQuery.when.apply(null, rabbit).done(function () {                 
                 var urlString = v.site + "/_vti_bin/listdata.svc/Actions?";
                 urlString += "$select=Id,Title,EffortTypeValue,DateCompleted,PMTUser,Expended,ActionComments,ParentID";
                 urlString += "&$expand=PMTUser";
@@ -262,10 +261,11 @@ CKO.FORMS.DIRECTIVES.EditForm= function () {
                                         $("#tabActions").html("").append(v.html);
                                     }
 
+                                    GetSkills();
+
                                     logit("v.skillsexpendedhours: " + v.skillsexpendedhours);
 
                                     //Enable click function to add multiple skills. Opens the DirectiveSkills list edit form.
-                                    GetSkills();
                                     $("#btnAddSkill").click(function (e) {
                                         e.preventDefault();
                                         var zurl = fixurl('/Lists/DirectiveSkills/NewForm.aspx?DirectiveID=' + v.directiveid + '&Action=EditForm&IsDlg=1');
@@ -359,18 +359,19 @@ CKO.FORMS.DIRECTIVES.EditForm= function () {
                             $("#btnAddBaseline").click(function (e) {
                                 e.preventDefault();
                                 v.items = [];
-                                var baselinedate = moment().add(8, 'hours').format("MM-DD-YYYY"); // adding 8 hours because the rest endpoint is subtracting the timezone offset
+                                //var baselinedate = moment().add(8, 'hours').format("MM-DD-YYYY"); // adding 8 hours because the rest endpoint is subtracting the timezone offset
+                                var baselinedate = moment().format("MM-DD-YYYY");
                                 v.items.push({
                                     "ParentID": v.parentid,
                                     "BaselineDate": baselinedate,
                                     "TotalProjectedHours": v.projectedhours,
                                     "TotalExpendedHours": v.skillsexpendedhours
                                 });
-                                AddItem(v.items[0]);
+                                AddBaseline(v.items[0]).success(AddBaselineSucceeded).fail(AddBaselineFail);
                             });
 
                             //Add a baseline
-                            function AddItem(itemProperties) {
+                            function AddBaseline(itemProperties) {
                                 return $.ajax({
                                     type: 'POST',
                                     url: "https://hq.tradoc.army.mil/sites/OCKO/PMT/_vti_bin/listdata.svc/DirectiveSkillsBaselines",
@@ -383,18 +384,12 @@ CKO.FORMS.DIRECTIVES.EditForm= function () {
                                 });
                             }
 
-                            function AddItemSucceeded() {
-                                v.count += 1;
-                                if (v.count === v.total) {
-                                    alert("Baseline added");
-                                    $("#SPSTools_Notify").fadeOut("2500", function () {
-                                        $("#SPSTools_Notify").html("");
-                                    });
-                                }
-                                GetBaselines();
+                            function AddBaselineSucceeded() {
+                               alert("Baseline added");
+                               GetBaselines();
                             }
 
-                            function AddItemFail(jqXHR, textStatus, errorThrown) {
+                            function AddBaselineFail(jqXHR, textStatus, errorThrown) {
                                 v.count += 1;
                                 if (v.count === v.total) {
                                     alert("add baseline failed");
@@ -403,6 +398,7 @@ CKO.FORMS.DIRECTIVES.EditForm= function () {
                                     });
                                 } else {
                                     console.log("Add baseline failed: " + errorThrown);
+                                    alert("Add baseline failed: " + errorThrown);
                                 }
                             }
                         }
