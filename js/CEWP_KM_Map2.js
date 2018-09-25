@@ -260,8 +260,11 @@ CKO.KNOWLEDGEMAP.MAP.Map = function () {
     }
 
     function drawtooltip(obj, ev) {
-        v.mx = ev.Ia.clientX;
-        v.my = ev.Ia.clientY;
+        //var position = getPosition(obj);
+        //v.mx = position.x;
+        //v.my = position.y;
+        v.mx = ev.va.clientX;
+        v.my = ev.va.clientY;
         var title = obj.title;
         var data = obj.popupdata;
         var html = "<div class='popdata' id='popcontainer_" + title.replace(/ /g, "_") + "'>";
@@ -500,6 +503,31 @@ CKO.KNOWLEDGEMAP.MAP.Map = function () {
 
     function closemarker() {
         $(".markerpanel").hide();
+    }
+
+    function getPosition(el) {
+        var xPosition = 0;
+        var yPosition = 0;
+
+        while (el) {
+            if (el.tagName == "BODY") {
+                // deal with browser quirks with body/window/document and page scroll
+                var xScrollPos = el.scrollLeft || document.documentElement.scrollLeft;
+                var yScrollPos = el.scrollTop || document.documentElement.scrollTop;
+
+                xPosition += (el.offsetLeft - xScrollPos + el.clientLeft);
+                yPosition += (el.offsetTop - yScrollPos + el.clientTop);
+            } else {
+                xPosition += (el.offsetLeft - el.scrollLeft + el.clientLeft);
+                yPosition += (el.offsetTop - el.scrollTop + el.clientTop);
+            }
+
+            el = el.offsetParent;
+        }
+        return {
+            x: xPosition,
+            y: yPosition
+        };
     }
 
     return {

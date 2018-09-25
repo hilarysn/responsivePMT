@@ -5,6 +5,75 @@
     .thDate, .tdDate { width: 15%; }
     .thHours, .tdHours { width: 10%; }
     .thComment, .tdComment { width: 50%; }
+    .gantt_add { display: none; }
+    .panel-footer { min-height: 50px; }
+    .btn { width: auto; float: right; }
+    .gantt_add, .gantt_grid_head_add { display: none; }
+    .assess {
+        border: 2px solid #f34c4c;
+        color: #f34c4c;
+        background: #f34c4c;
+    }
+
+        .assess .gantt_task_progress {
+            background: #eb0c0c;
+        }
+
+    .design {
+        border: 2px solid #f8a905;
+        color: #f8a905;
+        background: #f8a905;
+    }
+
+        .design .gantt_task_progress {
+            background: #ff6a00;
+        }
+
+    .develop {
+        border: 2px solid #3c8de9;
+        color: #3c8de9;
+        background: #3c8de9;
+    }
+
+        .develop .gantt_task_progress {
+            background: #066ff1;
+        }
+
+    .pilot {
+        border: 2px solid #6be3df;
+        color: #6be3df;
+        background: #6be3df;
+    }
+
+        .pilot .gantt_task_progress {
+            background: #1db7b2;
+        }
+
+    .implement {
+        border: 2px solid #29e921;
+        color: #29e921;
+        background: #29e921;
+    }
+
+        .implement .gantt_task_progress {
+            background: #14bf0d;
+        }
+
+    .gantt_grid_data .gantt_cell {
+        color: rgba(0, 0, 0, 1);
+    }
+
+    .day_scale {
+        background-color: #C3C7D4;
+    }
+
+    .week_scale {
+        background-color: #E5DFE8;
+    }
+
+    .month_scale {
+        background-color: #DFE8DF;
+    }
 </style>
 
 <script language="javascript" type="text/javascript">
@@ -24,13 +93,16 @@
 <div data-role="form" style="display:none">
     <div class="container-fluid" id="ViewForm">
         <ul class="nav nav-tabs" role="tablist">
-            <li class="active directivetab"><a href="#tabMain" role="tab" data-toggle="tab">Main</a></li>
-            <li class="directivetab"><a href="#tabOrg" role="tab" data-toggle="tab">Staff/Orgs</a></li>
-            <li class="directivetab"><a href="#tabActions" role="tab" data-toggle="tab">Actions</a></li>
-            <li class="directivetab"><a href="#tabCustomer" role="tab" data-toggle="tab">Customer Data</a></li>
-            <li class="directivetab"><a href="#tabInfo" role="tab" data-toggle="tab">Additional Info</a></li>
-            <li class="directivetab"><a href="#tabSkills" role="tab" data-toggle="tab">Skills</a></li>
-            <li class="directivetab"><a href="#tabPhases" role="tab" data-toggle="tab">Phases</a></li>
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active directivetab"><a href="#tabMain" role="tab" data-toggle="tab">Main</a></li>
+                <li class="directivetab"><a href="#tabOrg" role="tab" data-toggle="tab">Staff/Orgs</a></li>
+                <li class="directivetab"><a href="#tabSkills" role="tab" data-toggle="tab">Skills</a></li>
+                <li class="directivetab"><a href="#tabPhases" role="tab" data-toggle="tab">Phases</a></li>
+                <li class="directivetab hidden"><a href="#tabPhaseData" role="tab" data-toggle="tab">PhaseData</a></li>
+                <li class="directivetab"><a href="#tabCustomer" role="tab" data-toggle="tab">Customer Data</a></li>
+                <li class="directivetab"><a href="#tabActions" role="tab" data-toggle="tab">Actions</a></li>
+                <li class="directivetab"><a href="#tabInfo" role="tab" data-toggle="tab">Additional Info</a></li>
+            </ul>
         </ul>
         <div class="tab-content">
             <div role="tabpanel" class="tab-pane active fade in" id="tabMain">
@@ -235,6 +307,25 @@
                 <div class="container-fluid">
                     <div class="row">
                         <div id="Phases"></div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-12">
+                            <button type="button" id="btnDay" class="btn btn-success" value="day" alt="View by Day">View by Day</button>
+                            <button type="button" id="btnWeek" class="btn btn-success" value="week" alt="View by Week">View by Week</button>
+                            <button type="button" id="btnMonth" class="btn btn-success" value="month" alt="View by Month">View by Month</button>
+                            <button type="button" id="btnYear" class="btn btn-success" value="year" alt="View by Year">View by Year</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="tabPhaseData">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div id="PhaseData">
+                            <div class="col-sm-10 control-field">
+                                <div class="datafield" data-field="DirectiveData"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

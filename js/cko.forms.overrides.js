@@ -16,7 +16,7 @@ CKO.FORMS.OVERRIDES = function () {
             alert("No template defined! Using standard form");
         }
         else {
-            if (v.loc.indexOf("NewForm.aspx") > 0 || v.loc.indexOf("EditForm.aspx") > 0 || v.loc.indexOf("DispForm.aspx") > 0) {
+            if (v.loc.indexOf("NewForm.aspx") > 0 || v.loc.indexOf("EditForm.aspx") > 0 || v.loc.indexOf("DispForm.aspx") > 0 || v.loc.indexOf("NewAction.aspx") > 0 || v.loc.indexOf("EditAction.aspx") > 0 ) {
                 $(".ms-formtable").hide();
                 $(".ms-formtoolbar").hide();
                 overrideform();
@@ -41,7 +41,7 @@ CKO.FORMS.OVERRIDES = function () {
             var field = $(this).attr("data-field");
             var target = $(this);
             $("td.ms-formbody").each(function (idx) {
-                if (this.innerHTML.indexOf('FieldName="' + field + '"') != -1) {
+                if (this.innerHTML.indexOf('FieldName="' + field + '"') !== -1) {
                     $(this).contents().appendTo(target);
                 }
             });

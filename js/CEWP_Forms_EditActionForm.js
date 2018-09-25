@@ -20,7 +20,8 @@ CKO.FORMS.ACTIONS.VARIABLES = {
     standards: null,
     alignmentrequired: true,
     actionid: jQuery.QueryString["ID"],
-    actiondate: jQuery.QueryString["Date"]
+    actiondate: jQuery.QueryString["Date"],
+    selects: null
 }
 
 CKO.FORMS.ACTIONS.EditForm = function () {
@@ -48,6 +49,7 @@ CKO.FORMS.ACTIONS.EditForm = function () {
         $("input").addClass("form-control");
         $("select").addClass("form-control");
         $("div[role='textbox']").addClass("form-control");
+        $("textarea").addClass("form-control");
         $("input[Title='Customer']").prop('readonly', true);
 
         $(".ms-cui-group").each(function () {
@@ -59,6 +61,45 @@ CKO.FORMS.ACTIONS.EditForm = function () {
                 //case "Ribbon.ListForm.Edit.Actions":
                 //    $(this).css({ "display": "none" });
                 //    break;
+            }
+        });
+
+        v.selects = new Array(); // hsn added
+        // First build an array for the select controls for cascading functions
+
+        $("select").each(function () {
+            if ($(this).attr("data-function") === "cascadeselect") {
+                var fields = null;
+                if ($(this).attr("data-ddFields")) {
+                    fields = String($(this).attr("data-ddFields"));
+                    fields = fields.split(", ");
+                }
+                v.selects.push({
+                    "id": $(this).attr("id"),
+                    "cascadeto": $(this).attr("data-cascadeto"),
+                    "cascadeval": "", // hsn
+                    //"cascadeval": String($("input[title*='" + $("#" + $(this).attr("data-cascadeto")).attr("data-sourcefield") + "']").val()),
+                    //set casdcade val based on non existant value. Instaed, loop thru select and find cascade val... in changeme
+                    "source": $(this).attr("data-sourcefield"),
+                    "sourceval": String($("input[title*='" + $(this).attr("data-sourcefield") + "']").val()),
+                    "orderby": $(this).attr("data-orderby"), // not currently ordering just the field to display in the dropdown
+                    "filter": $(this).attr("data-filterfield"),
+                    "list": $(this).attr("data-lookuplist"),
+                    "fields": fields,
+                    "items": null
+                })
+            } else {
+                if ($(this).attr("data-function") === "select") {
+                    // update the select with the hidden field value if set
+                    var selectval = String($("input[title*='" + $(this).attr("data-sourcefield") + "']").val());
+                    if (selectval !== "null") {
+                        $("#" + $(this).attr("id") + " option").each(function () {
+                            if ($(this).html() === selectval) {
+                                $(this).prop('selected', true);
+                            }
+                        });
+                    }
+                }
             }
         });
 
@@ -74,17 +115,26 @@ CKO.FORMS.ACTIONS.EditForm = function () {
                         GetDirectives();
                         $("#ddDirective").show();
                         $("#ddStandard").hide();
+                        $("#ddAlignment").hide();
                         $(".sagroup").hide();
+                        $(".sogroup").hide();
+                        $(".phase").show();
+                        $("Phase").show();
                         break;
 
                     case "Standard":
                         GetStandards();
                         $("#ddDirective").hide();
                         $("#ddStandard").show();
-                        $("#ddAlignment").parent().parent().show();
+                        $("#ddAlignment").show();
+                        $(".sagroup").show();
+                        $(".sogroup").show();
+                        $(".phase").hide();
+                        $("Phase").hide();
                         break;
                 }
             });
+
             // Now load either the standards or directives based on the selected effortype
             var et = $("select[title='EffortType'] option:selected").val();
             switch (et) {
@@ -92,14 +142,34 @@ CKO.FORMS.ACTIONS.EditForm = function () {
                     GetDirectives();
                     $("#ddDirective").show();
                     $("#ddStandard").hide();
+                    $("#ddAlignment").hide();
                     $(".sagroup").hide();
+                    $(".sogroup").hide();
+                    $(".phase").show();
+                    $("Phase").show();
                     break;
 
                 case "Standard":
                     GetStandards();
                     $("#ddDirective").hide();
                     $("#ddStandard").show();
-                    $("#ddAlignment").parent().parent().show();
+                    $("#ddAlignment").show();
+                    $(".sagroup").show();
+                    $(".sogroup").show();
+                    $(".phase").hide();
+                    $("Phase").hide();
+
+                    var tortellini = String($("input[title*='Customer']").val());
+                    tortellini = tortellini.split("|");
+
+                    $("#ddSupportedOrg option").each(function () { // hsn
+                        if ($(this).html() === tortellini[0]) {
+                            $(this).prop('selected', true);
+                        }
+                    });
+
+                    $("#ddSupportedOrg").attr("cval", tortellini[1]).change(); 
+                    $(".sogroup").show(); // hsn/
                     break;
             }
             DataLoaded();
@@ -153,7 +223,7 @@ CKO.FORMS.ACTIONS.EditForm = function () {
                     }
                 }
                 $("#ddStandard").html("").append(opts);
-                GetAlignments();
+                GetAlignments(); // hsn/
             }
         });
     }
@@ -208,73 +278,85 @@ CKO.FORMS.ACTIONS.EditForm = function () {
         });
     }
 
-    function GetAlignments() {
-        var idx = $("#ddStandard option:selected").val();
-        var standard = v.standards[idx]["standard"];
-        var paragraph = v.standards[idx]["paragraph"];
-        logit("GetAlignments: standard-" + standard + ", paragraph-" + paragraph);
-        if (v.standards[idx]["paragraph"] !== "N/A") {
-            // Now get the support alignments from the Alignments table using REST
-            var urlString = v.site + "/_vti_bin/listdata.svc/Alignments?";
-            urlString += "$select=Id,Parent,Paragraph,Reference,Description,ShortDescription";
-            //urlString += "&$filter=(Parent eq '" + paragraph + "')";
-            urlString += "&$filter=startswith(Parent, '" + paragraph + "')";
-            logit("Alignments urlString: " + urlString);
-
-            jQuery.ajax({
-                url: urlString,
-                method: "GET",
-                headers: { 'accept': 'application/json; odata=verbose' },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    //to do implement logging to a central list
-                    logit("Error Status: " + textStatus + ":: errorThrown: " + errorThrown);
-                },
-                success: function (data) {
-                    var results = data.d.results;
-                    var j = jQuery.parseJSON(JSON.stringify(results));
-                    var numitems = data.d.results.length;
-                    logit("Alignments Count: " + numitems);
-                    var alignment = String($("input[title='SupportAlignment']").val());
-                    var opts = "";
-                    if (alignment !== "undefined" && alignment !== "null" && alignment !== "") {
-                        for (var i = 0, length = j.length; i < length; i++) {
-                            var opt = j[i]["Paragraph"] + " " + j[i]["ShortDescription"];
-                            if (opt === alignment) {
-                                opts += "<option data-ld='" + j[i]["Description"] + "' selected value='" + opt + "'>" + opt + "</option>";
-                                $("#divSADescription").html("").append(j[i]["Description"]);
-                            }
-                            else {
-                                opts += "<option data-ld='" + j[i]["Description"] + "' value='" + opt + "'>" + opt + "</option>";
-                            }
-                        }
-                    }
-                    else {
-                        opts += "<option selected value='Select...'>Select...</option>";
-                        for (i = 0; i < j.length; i++) {
-                            opt = j[i]["Paragraph"] + " " + j[i]["ShortDescription"];
-                            opts += "<option data-ld='" + j[i]["Description"] + "' value='" + opt + "'>" + opt + "</option>";
-                            
-                        }
-                    }
-                    $("#ddAlignment").html("").append(opts);
-                    $(".sagroup").show();
-                    AlignmentsLoaded();
-                }
-            });
-        }
-        else {
-            // Support alignment would not be required for this standard
-            logit("ALIGNMENT NOT REQUIRED");
-            v.alignmentrequired = false;
-            $(".sagroup").hide();
-            $("input[title^='SupportAlignment']").val("N/A").closest(".form-group").hide(); // just set the support alignment to NA
-        }
-    }
-
     function LoadDropdowns() {
         var deferreds = [];
         deferreds.push($.when(CKO.CSOM.GetLookupData.getvalues("current", "Functions", "Title")).then(function (items) { CKO.CSOM.FillDropdowns2(items, "Title", ["ddFunction"], "Function"); }, function (sender, args) { logit("GetLookupData Failed 1, " + args.get_message()); }));
         deferreds.push($.when(CKO.CSOM.GetLookupData.getvalues("current", "Enablers", "Title")).then(function (items) { CKO.CSOM.FillDropdowns2(items, "Title", ["ddEnabler"], "Enabler"); }, function (sender, args) { logit("GetLookupData Failed 2, " + args.get_message()); }));
+        deferreds.push($.when(CKO.CSOM.GetLookupData.getvalues("current", "Orgs", "Title")).then(function (items) { CKO.CSOM.FillDropdowns(items, "Title", ["ddSupportedOrg"]); }, function (sender, args) { logit("GetLookupData Failed 3, " + args.get_message()); }));
+        return deferreds;
+    }
+
+    function Cascade() { // hsn added
+        logit("Cascade Started");
+        // All data loaded except need to get the dropdowns filtered and cascaded based on selected items
+        var deferreds = [];
+        for (var i = 0; i < v.selects.length; i++) {
+            // If there is a source val then get the items to filter the cascaded select
+            if (v.selects[i].sourceval !== "null") {
+                $("#" + v.selects[i].id + " option").each(function () {
+                    if ($(this).html() === v.selects[i].sourceval) {
+                        $(this).prop('selected', true);
+                    }
+                });
+                if (v.selects[i].fields !== null) {
+                    deferreds.push($.when(CKO.CSOM.GetListItems.getitemsfilteredorderedandpassfieldstoelement("current", v.selects[i].list, v.selects[i].filter, v.selects[i].sourceval, v.selects[i].orderby, i, v.selects[i].fields)).then(function (items, i) {
+                        if (items.get_count() > 0) {
+                            v.selects[i].items = items;
+                            var opts = "<option selected value='Select...'>Select...</option>";
+                            var enumerator = items.getEnumerator();
+                            var unique = "";
+                            var text;
+                            while (enumerator.moveNext()) {
+                                var current = enumerator.get_current();
+                                for (var z = 0; z < v.selects[i].fields.length; z++) {
+                                    if (z === 0) {
+                                        text = current.get_item(v.selects[i].fields[z]);
+                                    }
+                                    else {
+                                        text += "-" + current.get_item(v.selects[i].fields[z]);
+                                    }
+                                }
+                                // if there is a selected value set it here
+                                if (v.selects[i].cascadeval === current.get_item(v.selects[i].orderby)) {
+                                    opts += "<option selected value='" + current.get_item(v.selects[i].orderby) + "'>" + text + "</option>";
+                                }
+                                else {
+                                    opts += "<option value='" + current.get_item(v.selects[i].orderby) + "'>" + text + "</option>";
+                                }
+                            }
+                            // populate the child select with the options
+                            $("#" + v.selects[i].cascadeto).html("").append(opts);
+                        }
+                    }, function (sender, args) {
+                        logit("Error getting data for child dropdown: " + args.get_message());
+                    }));
+                }
+                else {
+                    deferreds.push($.when(CKO.CSOM.GetListItems.getitemsfilteredorderedandpasstoelement("current", v.selects[i].list, v.selects[i].filter, v.selects[i].sourceval, v.selects[i].orderby, i)).then(function (items, i) {
+                        if (items.get_count() > 0) {
+                            v.selects[i].items = items;
+                            var opts = "<option selected value='Select...'>Select...</option>";
+                            var enumerator = items.getEnumerator();
+                            var unique = "";
+                            while (enumerator.moveNext()) {
+                                var current = enumerator.get_current();
+                                // if there is a selected value set it here
+                                if (v.selects[i].cascadeval === current.get_item(v.selects[i].orderby)) {
+                                    opts += "<option selected value='" + current.get_item(v.selects[i].orderby) + "'>" + current.get_item(v.selects[i].orderby) + "</option>";
+                                }
+                                else {
+                                    opts += "<option value='" + current.get_item(v.selects[i].orderby) + "'>" + current.get_item(v.selects[i].orderby) + "</option>";
+                                }
+                            }
+                            // populate the child select with the options
+                            $("#" + v.selects[i].cascadeto).html("").append(opts);
+                        }
+                    }, function (sender, args) {
+                        logit("Error getting data for child dropdown: " + args.get_message());
+                    }));
+                }
+            }
+        }
         return deferreds;
     }
 
@@ -314,6 +396,31 @@ CKO.FORMS.ACTIONS.EditForm = function () {
                     $(this).parent().append($cloned);
                     $(this).remove();
                     break;
+            }
+        });
+
+        // user assistance hide
+        $(".ms-description").each(function (idx) {
+            $(this).hide();
+        });
+
+        //user assistance show and hide
+        $("input[title='Enabler']").hide();
+        $("input[title*='Function']").hide();
+        $("span").each(function () {
+            if ($(this).html().indexOf("Displays your user name.") === 0) { $(this).hide(); }
+        });
+
+        //user assistance show and hide
+        $("#toggleHelp").click(function (e) {
+            e.preventDefault();
+            if ($(this).hasClass("showing")) {
+                $(".ms-description").hide();
+                $(this).removeClass("showing");
+            }
+            else {
+                $(".ms-description").show();
+                $(this).addClass("showing");
             }
         });
 
@@ -357,7 +464,180 @@ CKO.FORMS.ACTIONS.EditForm = function () {
         });
     }
 
+    function GetAlignments() {
+        var idx = $("#ddStandard option:selected").val();
+        var standard = v.standards[idx]["standard"];
+        var paragraph = v.standards[idx]["paragraph"];
+        logit("GetAlignments: standard-" + standard + ", paragraph-" + paragraph);
+        if (v.standards[idx]["paragraph"] !== "N/A") {
+            // Now get the support alignments from the Alignments table using REST
+            var urlString = v.site + "/_vti_bin/listdata.svc/Alignments?";
+            urlString += "$select=Id,Parent,Paragraph,Reference,Description,ShortDescription";
+            //urlString += "&$filter=(Parent eq '" + paragraph + "')";
+            urlString += "&$filter=startswith(Parent, '" + paragraph + "')";
+            logit("Alignments urlString: " + urlString);
+
+            jQuery.ajax({
+                url: urlString,
+                method: "GET",
+                headers: { 'accept': 'application/json; odata=verbose' },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    //to do implement logging to a central list
+                    logit("Error Status: " + textStatus + ":: errorThrown: " + errorThrown);
+                },
+                success: function (data) {
+                    var results = data.d.results;
+                    var j = jQuery.parseJSON(JSON.stringify(results));
+                    var numitems = data.d.results.length;
+                    logit("Alignments Count: " + numitems);
+                    var alignment = String($("input[title='SupportAlignment']").val());
+                    var opts = "";
+                    if (alignment !== "undefined" && alignment !== "null" && alignment !== "") {
+                        for (var i = 0, length = j.length; i < length; i++) {
+                            var opt = j[i]["Paragraph"] + " " + j[i]["ShortDescription"];
+                            logit("alignment: " + alignment + ", opt: " + opt);
+                            if (opt === alignment) {
+                                opts += "<option data-ld='" + j[i]["Description"] + "' selected value='" + opt + "'>" + opt + "</option>";
+                                $("#divSADescription").html("").append(j[i]["Description"]);
+
+                            }
+                            else {
+                                opts += "<option data-ld='" + j[i]["Description"] + "' value='" + opt + "'>" + opt + "</option>";
+                            }
+                        }
+                    }
+                    else {
+                        opts += "<option selected value='Select...'>Select...</option>";
+                        for (i = 0; i < j.length; i++) {
+                            opt = j[i]["Paragraph"] + " " + j[i]["ShortDescription"];
+                            opts += "<option data-ld='" + j[i]["Description"] + "' value='" + opt + "'>" + opt + "</option>";
+
+                        }
+                    }
+                    $("#ddAlignment").html("").append(opts);
+
+                    var salignment = $("#ddAlignment option:selected").val(); // hsn
+                    $("input[title='SupportAlignment']").val(salignment);
+                    var ld = $("#ddAlignment option:selected").attr("data-ld");
+                    $("#divSADescription").html("").append(ld); // hsn/
+
+                    $(".sagroup").show();
+                    AlignmentsLoaded();
+                }
+            });
+        }
+        else {
+            // Support alignment would not be required for this standard
+            logit("ALIGNMENT NOT REQUIRED");
+            v.alignmentrequired = false;
+            $(".sagroup").hide();
+            $("input[title^='SupportAlignment']").val("N/A").closest(".form-group").hide(); // just set the support alignment to NA
+        }
+    }
+
     function changeme(obj) {
+        var f = $("#" + obj.id).attr("data-function");
+        var cval = $("#" + obj.id).attr("cval") !== null || $("#" + obj.id).attr("cval") !== '' ? $("#" + obj.id).attr("cval") : null;
+        logit("cval: " + cval);
+        logit("Change called on: " + obj.id + ", function: " + f);
+        switch (f) {
+            case "cascadeselect":
+                // loop through the selects array and then do another query and update of the values. Then update the source value to the changed select value( this is the hidden form field)
+                for (var i = 0; i < v.selects.length; i++) {
+                    if (v.selects[i].id === obj.id) {
+                        // this is the changed select update the source value and get the new items
+                        v.selects[i].sourceval = $("#" + obj.id + " option:selected").val();
+                        $("input[title*='" + $("#" + obj.id).attr("data-sourcefield") + "']").val(v.selects[i].sourceval);
+                        if (v.selects[i].fields !== null) {
+                            $.when(CKO.CSOM.GetListItems.getitemsfilteredorderedandpassfieldstoelement("current", v.selects[i].list, v.selects[i].filter, v.selects[i].sourceval, v.selects[i].orderby, i, v.selects[i].fields)).then(function (items, i) {
+                                if (items.get_count() > 0) {
+                                    v.selects[i].items = items;
+                                    if (cval === null) {
+                                        var opts = "<option selected value='Select...'>Select...</option>";
+                                    }
+                                    else {
+                                        var opts = "<option value='Select...'>Select...</option>";
+                                    }
+                                    var enumerator = items.getEnumerator();
+                                    var unique = "";
+                                    var text;
+                                    while (enumerator.moveNext()) {
+                                        var current = enumerator.get_current();
+                                        for (var z = 0; z < v.selects[i].fields.length; z++) {
+                                            if (z === 0) {
+                                                text = current.get_item(v.selects[i].fields[z]);
+                                            }
+                                            else {
+                                                text += "-" + current.get_item(v.selects[i].fields[z]);
+                                            }
+                                        }
+                                        if (cval === null) {
+                                            opts += "<option value='" + current.get_item(v.selects[i].orderby) + "'>" + text + "</option>";
+                                        }
+                                        else {
+                                            if (current.get_item(v.selects[i].orderby) === cval) {
+                                                opts += "<option selected value='" + current.get_item(v.selects[i].orderby) + "'>" + text + "</option>";
+                                            }
+                                            else {
+                                                opts += "<option value='" + current.get_item(v.selects[i].orderby) + "'>" + text + "</option>";
+                                            }
+                                        }
+                                    }
+                                    // populate the child select with the options
+                                    $("#" + v.selects[i].cascadeto).html("").append(opts);
+                                }
+                            }, function (sender, args) {
+                                logit("Error getting data for child dropdown: " + args.get_message());
+                            });
+                        } else {
+                            $.when(CKO.CSOM.GetListItems.getitemsfilteredorderedandpasstoelement("current", v.selects[i].list, v.selects[i].filter, v.selects[i].sourceval, v.selects[i].orderby, i)).then(function (items, i) {
+                                if (items.get_count() > 0) {
+                                    v.selects[i].items = items;
+                                    if (cval === null) {
+                                        var opts = "<option selected value='Select...'>Select...</option>";
+                                    }
+                                    else {
+                                        var opts = "<option value='Select...'>Select...</option>";
+                                    }
+                                    var enumerator = items.getEnumerator();
+                                    var unique = "";
+                                    while (enumerator.moveNext()) {
+                                        var current = enumerator.get_current();
+                                        if (current.get_item(v.selects[i].orderby) === cval) {
+                                            opts += "<option selected value='" + current.get_item(v.selects[i].orderby) + "'>" + current.get_item(v.selects[i].orderby) + "</option>";
+                                        }
+                                        else {
+                                            opts += "<option value='" + current.get_item(v.selects[i].orderby) + "'>" + current.get_item(v.selects[i].orderby) + "</option>";
+                                        }
+                                    }
+                                    // populate the child select with the options
+                                    $("#" + v.selects[i].cascadeto).html("").append(opts);
+                                }
+                            }, function (sender, args) {
+                                logit("Error getting data for child dropdown: " + args.get_message());
+                            });
+                        }
+                    }
+                }
+                break;
+
+            case "updatesource": // hsn
+                // If the update source attr = Change Customer to change how input works
+
+                if ($("#" + obj.id).attr("data-sourcefield") === "Customer") {
+                    $("input[title*='" + $("#" + obj.id).attr("data-sourcefield") + "']").val($("#ddSupportedOrg option:selected").val() + "|" + $("#ddSupportedSubOrg option:selected").val());
+                } else {
+                    // update the source field with the selected value
+                    $("input[title*='" + $("#" + obj.id).attr("data-sourcefield") + "']").val($("#" + obj.id + " option:selected").val());
+                }
+                break;
+
+            case "select":
+                // update the source field with the selected value
+                $("input[title*='" + $("#" + obj.id).attr("data-sourcefield") + "']").val($("#" + obj.id + " option:selected").val());
+                break;
+        }
+
         switch (obj.id) {
             case "ddStandard":
                 // Set the hidden title field to the selected Standard
@@ -367,6 +647,18 @@ CKO.FORMS.ACTIONS.EditForm = function () {
                 $("#divDescription").html("").append(v.standards[idx]["description"]);
                 $("input[title*='Customer']").val(v.standards[idx]["org"] + "|" + v.standards[idx]["suborg"]);
                 $("input[title*='ParentID']").val(v.standards[idx]["ParentID"]);
+
+                $("#ddSupportedOrg option").each(function () { // hsn
+                    if ($(this).html() === v.standards[idx]["org"]) {
+                        $(this).prop('selected', true);
+                    }
+                });
+
+                $("#ddSupportedOrg").attr("cval", v.standards[idx]["suborg"]).change(); // hsn
+                $(".sogroup").show(); // hsn/
+                $(".phase").show();
+                $("Phase").show();
+
                 GetAlignments();
                 break;
 
@@ -378,6 +670,7 @@ CKO.FORMS.ACTIONS.EditForm = function () {
                 $("input[title*='Customer']").val(v.directives[idx]["org"] + "|" + v.directives[idx]["suborg"]);
                 $("input[title='SupportAlignment']").val(v.directives[idx]["alignment"]);
                 $("input[title*='ParentID']").val(v.directives[idx]["ParentID"]);
+                $("input[title*='Phase']").val(v.directives[idx]["Phase"]);
                 break;
 
             case "ddEnabler":
@@ -387,6 +680,10 @@ CKO.FORMS.ACTIONS.EditForm = function () {
             case "ddFunction":
                 $("input[title='Function Required Field']").val($("#ddFunction option:selected").val());
                 break;
+
+            //case "Phase":
+            //    $("input[title='Phase']").val($("#Phase option:selected").val());
+            //    break;
         }
     }
 
@@ -399,6 +696,9 @@ CKO.FORMS.ACTIONS.EditForm = function () {
                 goon = false;
                 v.errortext += "Support Alignment ";
             }
+            else {
+                $("input[title='SupportAlignment']").val("N/A").parent().parent().hide(); // just set the support alignment to NA
+            }
         }
         if ($("#ddStandard option:selected").val() === "Select..." && $("select[title='EffortType'] option:selected").val() === "Standard") {
             goon = false;
@@ -408,11 +708,11 @@ CKO.FORMS.ACTIONS.EditForm = function () {
             goon = false;
             v.errortext += "Objective ";
         }
+        if ($("#Phase option:selected").val() === "" && $("select[title='EffortType'] option:selected").val() === "Directive") {
+            goon = false;
+            v.errortext += "Phase ";
+        }
         var skill = $("div[data-field='Skill']").find(".valid-text").text();
-        //if (skill <= 0) {
-        //    goon = false;
-        //    v.errortext += "Skill ";
-        //}
         if ($("input[title='Enabler Required Field']").val() === "Select..." || $("input[title='Enabler Required Field']").val() === "") {
             goon = false;
             v.errortext += "Enabler ";
@@ -425,10 +725,6 @@ CKO.FORMS.ACTIONS.EditForm = function () {
             goon = false;
             v.errortext += "Comments ";
         }
-        //if ($("div[role='textbox']").html().length <= 13) {
-        //    goon = false;
-        //    v.errortext += "Comments ";
-        //}
         if ($("input[title*='Date Completed']").val() === "") {
             goon = false;
             v.errortext += "Date Completed ";

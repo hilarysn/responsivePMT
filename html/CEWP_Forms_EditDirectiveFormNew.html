@@ -1,0 +1,412 @@
+﻿<style type="text/css">
+    .hidden { display: none; }
+    /*#tblActions { min-width: 100%; }*/
+    /*.thUser, .tdUser { width: 25%; }
+    .thDate, .tdDate { width: 15%; }
+    .thHours, .tdHours { width: 10%; }*/
+    .thComment, .tdComment { max-width: 500px; }
+    .gantt_add { display: none; }
+    .panel-footer { min-height: 50px; }
+    .btn-phase { width: 50px; float: right; }
+    #txtDirectiveData { min-height: 450px !important;
+    }
+    .assess {
+        border: 2px solid #f34c4c;
+        color: #f34c4c;
+        background: #f34c4c;
+    }
+
+        .assess .gantt_task_progress {  background: #eb0c0c; }
+
+    .design {
+        border: 2px solid #f8a905;
+        color: #f8a905;
+        background: #f8a905;
+    }
+
+        .design .gantt_task_progress {
+            background: #ff6a00;
+        }
+
+    .develop {
+        border: 2px solid #3c8de9;
+        color: #3c8de9;
+        background: #3c8de9;
+    }
+
+        .develop .gantt_task_progress { background: #066ff1; }
+
+    .pilot {
+        border: 2px solid #6be3df;
+        color: #6be3df;
+        background: #6be3df;
+    }
+
+        .pilot .gantt_task_progress {
+            background: #1db7b2;
+        }
+
+    .implement {
+        border: 2px solid #29e921;
+        color: #29e921;
+        background: #29e921;
+    }
+
+        .implement .gantt_task_progress {
+            background: #14bf0d;
+        }
+    .gantt_grid_data .gantt_cell {
+        color: rgba(0, 0, 0, 1);
+    }
+
+    .day_scale {
+        background-color: #C3C7D4;
+    }
+
+    .week_scale {
+        background-color: #E5DFE8;
+    }
+
+    .month_scale {
+        background-color: #DFE8DF;
+    }
+</style>
+
+<script language="javascript" type="text/javascript">
+    SP.SOD.executeOrDelayUntilScriptLoaded(function () {
+        var SLASH = "/";
+        var tp1 = new String(window.location.protocol);
+        var tp2 = new String(window.location.host);
+        var tp3 = L_Menu_BaseUrl;
+        var site = tp1 + SLASH + SLASH + tp2 + tp3;
+        SP.SOD.registerSod('CEWP_Forms_EditDirectiveForm.js', site + "/SiteAssets/js/CEWP_Forms_EditDirectiveForm.js");
+        EnsureScriptFunc("CEWP_Forms_EditDirectiveForm.js", null, function () {
+            CKO.FORMS.DIRECTIVES.EditForm().Init(site);
+        });
+    }, "sp.js");
+</script>
+
+<div data-role="form" style="display:none">
+    <div class="container-fluid" id="EditForm">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="active nav-item directivetab"><a class="nav-link" href="#tabMain" role="tab" data-toggle="tab">Main</a></li>
+            <li class="nav-item directivetab"><a class="nav-link" href="#tabOrg" role="tab" data-toggle="tab">Staff/Orgs</a></li>
+            <li class="nav-item directivetab"><a class="nav-link" href="#tabSkills" role="tab" data-toggle="tab">Skills</a></li>
+            <li class="nav-item directivetab"><a class="nav-link" href="#tabPhases" role="tab" data-toggle="tab">Phases</a></li>
+            <li class="nav-item directivetab hidden"><a class="nav-link" href="#tabPhaseData" role="tab" data-toggle="tab">PhaseData</a></li>
+            <li class="nav-item directivetab"><a class="nav-link" href="#tabCustomer" role="tab" data-toggle="tab">Customer Data</a></li>
+            <li class="nav-item directivetab"><a class="nav-link" href="#tabActions" role="tab" data-toggle="tab">Actions</a></li>
+            <li class="nav-item directivetab"><a class="nav-link" href="#tabInfo" role="tab" data-toggle="tab">Additional Info</a></li>
+        </ul>
+        <div class="row">
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane active fade show" id="tabMain">
+                    <div class="container-fluid">
+                        <div class="form-horizontal">
+                            <div class="form-group row">
+                                <label class="col-sm-2 col-form-label">Directive<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <div class="col-sm-10">
+                                    <div data-field="Directive"></div>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-2 col-form-label">Description<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <div class="col-sm-10">
+                                    <div data-field="DirectiveDescription"></div>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-2 col-form-label">Lead Comments<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <div class="col-sm-10">
+                                    <div class="datafield" data-field="Lead Comments"></div>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-2 col-form-label">Team Comments</label>
+                                <div class="col-sm-10">
+                                    <div data-field="TeamComments"></div>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Status<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <label class="col-sm-3 col-form-label">Manned<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <label class="col-sm-3 col-form-label">Equipped<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <label class="col-sm-3 col-form-label">Trained<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <div class="col-sm-3"><div data-field="DirectiveStatus"></div></div>
+                                <div class="col-sm-3"><div data-field="Manned"></div></div>
+                                <div class="col-sm-3"><div data-field="Equipped"></div></div>
+                                <div class="col-sm-3"><div data-field="Trained"></div></div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">AvailableManHours<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <label class="col-sm-3 col-form-label">ProjectedManHours<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <label class="col-sm-3 col-form-label">Expended</label>
+                                <label class="col-sm-3 col-form-label">PercentExpended</label>
+                                <div class="col-sm-3"><div data-field="AvailableManHours"></div> </div>
+                                <div class="col-sm-3"><div data-field="ProjectedManHours"></div> </div>
+                                <div class="col-sm-3 readonly"><div data-field="Expended"></div> </div>
+                                <div class="col-sm-3 readonly"><div data-field="PercentExpended"></div> </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label">Start Date<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <label class="col-sm-3 col-form-label">Suspense Date<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <label class="col-sm-3 col-form-label">Date Completed</label>
+                                <label class="col-sm-3 col-form-label">Report Required</label>
+                                <div class="col-sm-3"><div data-field="Start Date"></div> </div>
+                                <div class="col-sm-3"><div data-field="SuspenseDate"></div> </div>
+                                <div class="col-sm-3"><div data-field="Date Completed"></div> </div>
+                                <div class="col-sm-3"><div data-field="ReportRequired"></div> </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-6 col-form-label">MOEQualitative<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <label class="col-sm-6 col-form-label">MOEQuantitative<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <div class="col-sm-6"><div data-field="MOEQualitative"></div></div>
+                                <div class="col-sm-6"><div data-field="MOEQuantitative"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div role="tabpanel" class="tab-pane" id="tabOrg">
+                    <div class="container-fluid">
+                        <div class="form-horizontal">
+                            <div class="form-group row">
+                                <label class="col-sm-2 col-form-label">Staff Lead<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <div class="col-sm-10">
+                                    <div data-field="StaffLead"></div>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-2 col-form-label">Staff Assist<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <div class="col-sm-10">
+                                    <div data-field="StaffAssist"></div>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-2 col-form-label">Lead Assessment<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <div class="col-sm-10">
+                                    <div data-field="LeadAssessment"></div>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-6 col-form-label">Source Authority<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <label class="col-sm-6 col-form-label">Source Reference<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <div class="col-sm-6"><select onchange="CKO.FORMS.DIRECTIVES.EditForm().changeme(this)" id="ddSourceAuthority" data-function="cascadeselect" data-sourcefield="SourceAuthority" data-cascadeto="ddSourceReference" data-lookuplist="Alignment" data-orderby="Reference" data-filterfield="Title" data-filtertag="ddSourceAuthority" data-tagtype="select"></select><br /><div class="hidden" data-field="SourceAuthority"></div></div>
+                                <div class="col-sm-6"><select onchange="CKO.FORMS.DIRECTIVES.EditForm().changeme(this)" id="ddSourceReference" data-function="updatesource" data-sourcefield="SourceReference"></select><br /><div class="hidden" data-field="SourceReference"></div></div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-4 col-form-label">Supported Org<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <label class="col-sm-4 col-form-label">Supported Sub Org<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <label class="col-sm-4 col-form-label">Supported Other Org</label>
+                                <div class="col-sm-4"><select onchange="CKO.FORMS.DIRECTIVES.EditForm().changeme(this)" id="ddSupportedOrg" data-function="cascadeselect" data-sourcefield="SupportedOrg" data-cascadeto="ddSupportedSubOrg" data-lookuplist="SubOrgs" data-orderby="Title" data-filterfield="Organization" data-filtertag="ddSupportedOrg" data-tagtype="select"></select><br /><div class="hidden" data-field="SupportedOrg"></div></div>
+                                <div class="col-sm-4"><select onchange="CKO.FORMS.DIRECTIVES.EditForm().changeme(this)" id="ddSupportedSubOrg" data-function="updatesource" data-sourcefield="SupportedSubOrg"></select><br /><div class="hidden" data-field="SupportedSubOrg"></div></div>
+                                <div class="col-sm-4"><div data-field="SupportedOtherOrg"></div></div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-4 col-form-label">Supporting Org<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <label class="col-sm-4 col-form-label">Support Reference<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <label class="col-sm-4 col-form-label">Support Paragraph<span title="This is a required field." class="ms-formvalidation"> *</span></label>
+                                <div class="col-sm-4"><select onchange="CKO.FORMS.DIRECTIVES.EditForm().changeme(this)" id="ddSupportingOrg" data-function="select" data-sourcefield="SupportingOrg"></select><br /><div class="hidden" data-field="SupportingOrg"></div></div>
+                                <div class="col-sm-4"><select onchange="CKO.FORMS.DIRECTIVES.EditForm().changeme(this)" id="ddSupportReference" data-function="cascadeselect" data-sourcefield="SupportReference" data-cascadeto="ddSupportParagraph" data-lookuplist="Alignments" data-orderby="Title" data-filterfield="Reference" data-filtertag="ddSupportReference" data-tagtype="select" data-ddFields="Title, ShortDescription"></select><br /><div class="hidden" data-field="SupportReference"></div></div>
+                                <div class="col-sm-4"><select onchange="CKO.FORMS.DIRECTIVES.EditForm().changeme(this)" id="ddSupportParagraph" data-function="updatesource" data-sourcefield="SupportParagraph"></select><br /><div class="hidden" data-field="SupportParagraph"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div role="tabpanel" class="tab-pane" id="tabActions">
+                </div>
+                <div role="tabpanel" class="tab-pane" id="tabCustomer">
+                    <div class="container-fluid">
+                        <div class="form-horizontal">
+                            <div class="form-group row">
+                                <label class="col-sm-2 col-form-label">Customer Org</label>
+                                <div class="col-sm-10">
+                                    <div data-field="CustomerOrg"></div>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-2 col-form-label">Customer POC</label>
+                                <div class="col-sm-10">
+                                    <div data-field="CustomerPOC"></div>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-2 col-form-label">Customer MoE</label>
+                                <div class="col-sm-10">
+                                    <div data-field="CustomerMoE"></div>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-2 col-form-label">Customer MoP</label>
+                                <div class="col-sm-10">
+                                    <div data-field="CustomerMoP"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div role="tabpanel" class="tab-pane" id="tabInfo">
+                    <!--Additional Info-->
+                    <div class="container-fluid">
+                        <div class="form-horizontal">
+                            <div class="form-group row">
+                                <label class="col-sm-1 col-form-label">Additional Information Link</label>
+                                <div class="col-sm-11"><div data-field="AdditionalInformation"></div></div>
+                            </div>
+                            <div class="form-group row">
+                                <label class="col-sm-6 col-form-label">Effect on Value </label>
+                                <label class="col-sm-6 col-form-label">Value</label>
+                                <div class="col-sm-6"><div data-field="AffectOnValue"></div></div>
+                                <div class="col-sm-6"><div data-field="Value"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div role="tabpanel" class="tab-pane" id="tabSkills">
+                    <div class="container-fluid">
+                        <table class="table table-striped table-bordered table-hover" id="tblSkills">
+                            <thead>
+                                <tr>
+                                    <th class="thactions">Actions</th>
+                                    <th class="thskill">Skill</th>
+                                    <th class="thhours">Hours</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tblSkillsBody"></tbody>
+                            <tfoot>
+                                <tr class="info">
+                                    <td colspan="2" class="tdlabeltotal">Total</td>
+                                    <td class="tdhourtotal" id="skilltotal"></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" class="tdspacer"></td>
+                                    <td class="tdbuttons">
+                                        <input type="button" class="btn btn-success btn-sm" value="Add Skill" id="btnAddSkill" />
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <table class="table table-striped table-bordered table-hover" id="tblCurrentTotals">
+                            <thead>
+                                <tr>
+                                    <th class="thtoday">Total Hours as of Today &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                                    <th class="thcurrentprojectedhours">Current Projected Hours</th>
+                                    <th class="thtotalexpendedhours">Total Expended Hours</th>
+                                </tr>
+                            </thead>
+                            <tfoot id="tblCurrentTotalsFoot"></tfoot>
+                        </table>
+                        <table class="table table-striped table-bordered table-hover" id="tblSkillsBaseline">
+                            <thead>
+                                <tr>
+                                    <th class="thactionsbaseline" width="9%">Action</th>
+                                    <th class="thbaselinedate" id="baselinedate">Baseline Date</th>
+                                    <th class="thtotalprojectedhours" width="17%">Baseline Projected Hours</th>
+                                    <th class="thtotalexpendedhours" width="15%">Baseline Expended Hours</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tblSkillsBaselineBody"></tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="tdspacer"></td>
+                                    <td class="tdbuttons">
+                                        <input type="button" class="btn btn-success btn-sm" value="Add Baseline" id="btnAddBaseline" />
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                <div role="tabpanel" class="tab-pane" id="tabPhases">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div id="Phases"></div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-12" width="auto">
+                                <button type="button" id="btnDay" class="btn btn-success btn-sm" value="day" alt="View by Day">View by Day</button>
+                                <button type="button" id="btnWeek" class="btn btn-success btn-sm" value="week" alt="View by Week">View by Week</button>
+                                <button type="button" id="btnMonth" class="btn btn-success btn-sm" value="month" alt="View by Month">View by Month</button>
+                                <button type="button" id="btnYear" class="btn btn-success btn-sm" value="year" alt="View by Year">View by Year</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div role="tabpanel" class="tab-pane" id="tabPhaseData">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div id="PhaseData">
+                                <div class="col-sm-10 control-field">
+                                    <div class="datafield" data-field="DirectiveData"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <button type="button" id="btnSave" class="btn btn-success btn-sm">Save Directive</button>
+                <button type="button" id="btnCancel" class="btn btn-danger btn-sm">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="PhaseModal" class="modal">
+    <div class="modal-vertical-alignment-helper">
+        <div class="modal-dialog modal-vertical-align-center">
+            <div class="modal-content modal-content-inherit">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button><h3 class="panel-title" id="PhaseModalTitle"></h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="container-fluid" id="PhaseModalBody">
+                            <label for="phase">
+                                Phase
+                                <select id='ddPhase' name='phase'><option>Assess</option><option>Design</option><option>Develop</option><option>Pilot</option><option>Implement</option></select>
+                            </label>
+                            <label for="startdate">
+                                Start Date
+                                <input type='text' name='startdate' id='txtStart' />
+                            </label>
+                            <label for="duration">
+                                Duration (Days)
+                                <input type='text' name='duration' id='txtDuration' />
+                            </label>
+                            <label for="progress">
+                                Progress
+                                <select id='ddProgress' name='progress'>
+                                    <option value="0.0">0</option>
+                                    <option value="0.1">10%</option>
+                                    <option value="0.2">20%</option>
+                                    <option value="0.3">30%</option>
+                                    <option value="0.4">40%</option>
+                                    <option value="0.5">50%</option>
+                                    <option value="0.6">60%</option>
+                                    <option value="0.7">70%</option>
+                                    <option value="0.8">80%</option>
+                                    <option value="0.9">90%</option>
+                                    <option value="1.0">100%</option>
+                                </select>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="panel-footer">
+                        <a class="btn btn-success btn-phase" name="save">Save</a>
+                        <a class="btn btn-default btn-phase" name="close">Cancel</a>
+                        <a class="btn btn-danger btn-phase" name="delete">Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div><html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"><head>
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:_dlc_DocId msdt:dt="string">M54EMC6KRVNF-1296556275-32</mso:_dlc_DocId>
+<mso:_dlc_DocIdItemGuid msdt:dt="string">ab4972bb-7866-4c1a-a75a-d9d01204f85e</mso:_dlc_DocIdItemGuid>
+<mso:_dlc_DocIdUrl msdt:dt="string">https://hq.tradoc.army.mil/sites/OCKO/PMT/_layouts/DocIdRedir.aspx?ID=M54EMC6KRVNF-1296556275-32, M54EMC6KRVNF-1296556275-32</mso:_dlc_DocIdUrl>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>

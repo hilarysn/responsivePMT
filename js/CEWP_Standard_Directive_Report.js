@@ -81,7 +81,7 @@ CKO.MIGRATIONS.Migrate = function () {
     function StandardsLoaded() {
         var j = v.json;
         var b = moment();
-        var month = moment().format("MMMM");
+        var dateFrom = moment().subtract(1, "months").endOf("month").format("MMMM");
         var year = moment().format("YYYY");
         console.log(month);
         console.log(year);
@@ -97,7 +97,7 @@ CKO.MIGRATIONS.Migrate = function () {
                 "EffortType": "Standard",
                 "SupportedSubOrg": j[i]["Reference"],
                 "SupportReference": j[i]["Reference"],
-                "Month": month,
+                "Month": dateFrom,
                 "Year": year
             });
         }
@@ -135,7 +135,7 @@ CKO.MIGRATIONS.Migrate = function () {
     function DirectivesLoaded() {
         var j = v.json;
         var b = moment();
-        var month = moment().format("MMMM");
+        var dateFrom = moment().subtract(1, "months").endOf("month").format("MMMM");
         var year = moment().format("YYYY");
         console.log(month);
         console.log(year);
@@ -151,7 +151,7 @@ CKO.MIGRATIONS.Migrate = function () {
                 "EffortType": "Directive",
                 "SupportedSubOrg": j[i]["SupportedSubOrg"],
                 "SupportReference": j[i]["SupportReference"],
-                "Month": month,
+                "Month": dateFrom,
                 "Year": year
             });
         }

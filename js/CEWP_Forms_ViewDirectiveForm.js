@@ -9,22 +9,25 @@ CKO.FORMS.DIRECTIVES.VARIABLES = {
     loc: String(window.location),
     waitmsg: null,
     directiveid: "DIR" + jQuery.QueryString["ID"],
+    itemid: jQuery.QueryString["ID"],
+    ganttdata: null,
+    startdate: null,
+    suspensedate: null,
     parentid: null,
     html: "",
     html2: "",
     html3: "",
     userID: null,
     hours: 0,
-
-    baselinedate: null,          //
-    skillsexpendedhours: null,   //
-    projectedhours: null,        // 
-
+    baselinedate: null,        //
+    skillsexpendedhours: null, //
+    projectedhours: null,      // 
     items: [], //
     total: 0,  //
     count: 0,  //
-
-    directive: null
+    directive: null,
+    directivedata: [],
+    directivedataarray: {}
 };
 
 CKO.FORMS.DIRECTIVES.ViewForm = function () {
@@ -32,18 +35,21 @@ CKO.FORMS.DIRECTIVES.ViewForm = function () {
     var v = CKO.FORMS.DIRECTIVES.VARIABLES;
 
     function Init(site) {
+        loadCSS(site + '/SiteAssets/css/dhtmlskins/terrace/dhtmlx.css');
         loadCSS(site + '/SiteAssets/css/dhtmlxgantt.css');
-        loadscript(site + '/SiteAssets/js/dhtmlxgantt.js', function () {
-            SP.SOD.executeOrDelayUntilScriptLoaded(function () {
-                RegisterSod('core.js', site + "/_layouts/1033/core.js");
-                RegisterSod('cko.forms.overrides.js', site + "/SiteAssets/js/cko.forms.overrides.js");
-                RegisterSodDep('core.js', 'sp.js');
-                RegisterSodDep('cko.forms.overrides.js', 'core.js');
-                EnsureScriptFunc("cko.forms.overrides.js", null, function () {
-                    CKO.FORMS.OVERRIDES().Init();
-                    FormLoaded(site);
-                });
-            }, "sp.js");
+        loadscript(site + '/SiteAssets/js/dhtmlx.js', function () {
+            loadscript(site + '/SiteAssets/js/dhtmlxgantt.js', function () {
+                SP.SOD.executeOrDelayUntilScriptLoaded(function () {
+                    RegisterSod('core.js', site + "/_layouts/1033/core.js");
+                    RegisterSod('cko.forms.overrides.js', site + "/SiteAssets/js/cko.forms.overrides.js");
+                    RegisterSodDep('core.js', 'sp.js');
+                    RegisterSodDep('cko.forms.overrides.js', 'core.js');
+                    EnsureScriptFunc("cko.forms.overrides.js", null, function () {
+                        CKO.FORMS.OVERRIDES().Init();
+                        FormLoaded(site);
+                    });
+                }, "sp.js");
+            });
         });
     }
 
@@ -60,12 +66,23 @@ CKO.FORMS.DIRECTIVES.ViewForm = function () {
         $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
             var target = $(e.target).attr("href"); // activated tab
             if (target === "#tabPhases") {
-                //var h = $("#ViewForm").height() - 50 + "px";
                 var h = "500px";
                 var w = $("#ViewForm").width() - 10 + "px";
                 logit("w: " + w + ", h: " + h);
                 $("#Phases").css({ height: h }, { width: w });
-                GetPhases();
+                GetPhaseData();
+            }
+        });
+
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            var target = $(e.target).attr("href"); // activated tab
+            if (target === "#tabSkills") {
+                var h = "500px";
+                var w = $("#ViewForm").width() - 10 + "px";
+                logit("w: " + w + ", h: " + h);
+                $("#Skills").css({ height: h }, { width: w });
+                GetSkills();
+                logit("v.skillsexpendedhours: " + v.skillsexpendedhours);
             }
         });
         // end hsn
@@ -75,7 +92,7 @@ CKO.FORMS.DIRECTIVES.ViewForm = function () {
             txt = txt.replace(/\t/g, '');
             if ($(this).attr("data-field") === "Directive") {
                 //org = org.replace(/\s/g, '');
-                txt = txt.replace(/(\r\n|\n|\r)/gm, "");
+                txt = txt.replace(/\/(\r\n|\n|\r)/gm, "");
                 txt = txt.trim();
                 v.directive = txt;
                 logit("Directive: " + v.directive);
@@ -88,13 +105,18 @@ CKO.FORMS.DIRECTIVES.ViewForm = function () {
                     $("#txt_" + z).val(txt);
                     break;
 
-                case "LeadComments":
-                    html = "<textarea rows='8' id='txt_" + z + "'></textarea>";
+                case "DirectiveData":
+                    html = "<textarea rows='20' id='txtDirectiveData'></textarea>";
                     $(this).html("").append(html);
-                    $("#txt_" + z).val(txt);
+                    $("#txtDirectiveData").val(txt);
+                    var directivedata = $("#txtDirectiveData").val(txt);
+                    v.directivedataarray = $("#txtDirectiveData").val(txt);
+                    directivedata = directivedata[0].innerText.replace(/(\|\r\n|\n|\r)/gm, "");
+                    console.log("var directivedata: " + directivedata);
+                    v.directivedata = directivedata;
                     break;
 
-                case "Lead Comments":
+                case "LeadComments":
                     html = "<textarea rows='8' id='txt_" + z + "'></textarea>";
                     $(this).html("").append(html);
                     $("#txt_" + z).val(txt);
@@ -148,7 +170,7 @@ CKO.FORMS.DIRECTIVES.ViewForm = function () {
                     if (numitems > 0) {
                         for (var i = 0; i < j.length; i++) {
                             v.skillsexpendedhours += j[i]["Expended"];//for baselines
-                            v.parentid = j[i]["ParentID"] //sets v.parentid correctly. STOP worrying about it!
+                            v.parentid = j[i]["ParentID"]; //sets v.parentid correctly. STOP worrying about it!
                             v.items.push({
                                 "User": j[i]["PMTUser"]["Name"],
                                 "Date": j[i]["DateCompleted"],
@@ -161,7 +183,7 @@ CKO.FORMS.DIRECTIVES.ViewForm = function () {
                     GetArchivedActions(); // totals for second skills table
                 }
             }
-        })
+        });
 
         function GetArchivedActions() {
             logit("GetArchivedeActions Called");
@@ -223,9 +245,8 @@ CKO.FORMS.DIRECTIVES.ViewForm = function () {
                         $("#tabActions").html("").append(v.html);
                     }
 
-                    GetSkills();
-
-                    logit("v.skillsexpendedhours: " + v.skillsexpendedhours);
+                    //GetSkills();
+                    //logit("v.skillsexpendedhours: " + v.skillsexpendedhours);
                 }
             });
         }
@@ -242,9 +263,8 @@ CKO.FORMS.DIRECTIVES.ViewForm = function () {
             v.hours = 0;
             logit("GetSkills Called for ParentID: " + v.parentid);
 
-            // v.directive = String($("input[title='Directive Required Field']").val());
-            // // Identify the directive, then display the Estimated Skills and hours for the Directive on the Skills tab
-            // // in the Estimated Skills and Hours table - ID = tblSkills
+            // Identify the directive, then display the Estimated Skills and hours for the Directive on the Skills tab
+            // in the Estimated Skills and Hours table - ID = tblSkills
 
             var inc = "Include(";
             var xml = "<View><Method Name='Read List' /><Query><OrderBy><FieldRef Name='Hours' /></OrderBy><Where><Eq><FieldRef Name='ParentID' /><Value Type='Text'>" + v.directiveid + "</Value></Eq></Where></Query>";
@@ -349,107 +369,32 @@ CKO.FORMS.DIRECTIVES.ViewForm = function () {
         logit("Update Dropdowns complete.");
     }
 
+    function GetPhaseData() {
+        var urlString = v.site + "/_vti_bin/listdata.svc/Directives?";
+        urlString += "$select=Id,DirectiveData,StartDate,SuspenseDate";
+        urlString += "&$filter=(Id eq " + v.itemid + ")";
+
+        jQuery.ajax({
+            url: urlString,
+            method: "GET",
+            headers: { 'accept': 'application/json; odata=verbose' },
+            error: function (jqXHR, textStatus, errorThrown) {
+                logit("Error Status: " + textStatus + ":: errorThrown: " + errorThrown);
+            },
+            success: function (data) {
+                var results = data.d.results;
+                var t0 = String(results[0].DirectiveData);
+                logit("t0 TYPE: " + typeof t0);
+                logit(t0);
+                v.ganttdata = t0;
+                GetPhases();
+            }
+        });
+    }
+
     function GetPhases() {
         logit("Get Phases Called");
-        var demo_tasks = {
-            data: [
-                { "id": 1, "text": "Office itinerancy", "type": 'gantt.config.types.project', "order": "10", progress: 0.4, open: false },
-                { "id": 2, "text": "Office facing", "type": 'gantt.config.types.project', "start_date": "02-04-2018", "duration": "8", "order": "10", progress: 0.6, "parent": "1", open: true },
-                { "id": 3, "text": "Furniture installation", "type": 'gantt.config.types.project', "start_date": "11-04-2018", "duration": "8", "order": "20", "parent": "1", progress: 0.6, open: true },
-                { "id": 4, "text": "The employee relocation", "type": 'gantt.config.types.project', "start_date": "13-04-2018", "duration": "6", "order": "30", "parent": "1", progress: 0.5, open: true },
-                { "id": 5, "text": "Interior office", "start_date": "02-04-2018", "duration": "7", "order": "3", "parent": "2", progress: 0.6, open: true },
-                { "id": 6, "text": "Air conditioners check", "start_date": "03-04-2018", "duration": "7", "order": "3", "parent": "2", progress: 0.6, open: true },
-                { "id": 7, "text": "Workplaces preparation", "start_date": "11-04-2018", "duration": "8", "order": "3", "parent": "3", progress: 0.6, open: true },
-                { "id": 8, "text": "Preparing workplaces", "start_date": "14-04-2018", "duration": "5", "order": "3", "parent": "4", progress: 0.5, open: true },
-                { "id": 9, "text": "Workplaces importation", "start_date": "14-04-2018", "duration": "4", "order": "3", "parent": "4", progress: 0.5, open: true },
-                { "id": 10, "text": "Workplaces exportation", "start_date": "14-04-2018", "duration": "3", "order": "3", "parent": "4", progress: 0.5, open: true },
-                { "id": 11, "text": "Product launch", "type": 'gantt.config.types.project', "order": "5", progress: 0.6, open: true },
-                { "id": 12, "text": "Perform Initial testing", "start_date": "03-04-2018", "duration": "5", "order": "3", "parent": "11", progress: 1, open: true },
-                { "id": 13, "text": "Development", "type": 'gantt.config.types.project', "start_date": "02-04-2018", "duration": "7", "order": "3", "parent": "11", progress: 0.5, open: true },
-                { "id": 14, "text": "Analysis", "start_date": "02-04-2018", "duration": "6", "order": "3", "parent": "11", progress: 0.8, open: true },
-                { "id": 15, "text": "Design", "type": 'gantt.config.types.project', "start_date": "02-04-2018", "duration": "5", "order": "3", "parent": "11", progress: 0.2, open: false },
-                { "id": 16, "text": "Documentation creation", "start_date": "02-04-2018", "duration": "7", "order": "3", "parent": "11", progress: 0, open: true },
-                { "id": 17, "text": "Develop System", "start_date": "03-04-2018", "duration": "2", "order": "3", "parent": "13", progress: 1, open: true },
-                { "id": 25, "text": "Beta Release", "start_date": "06-04-2018", "order": "3", "type": 'gantt.config.types.milestone', "parent": "13", progress: 0, open: true },
-                { "id": 18, "text": "Integrate System", "start_date": "08-04-2018", "duration": "2", "order": "3", "parent": "13", progress: 0.8, open: true },
-                { "id": 19, "text": "Test", "start_date": "10-04-2018", "duration": "4", "order": "3", "parent": "13", progress: 0.2, open: true },
-                { "id": 20, "text": "Marketing", "start_date": "10-04-2018", "duration": "4", "order": "3", "parent": "13", progress: 0, open: true },
-                { "id": 21, "text": "Design database", "start_date": "03-04-2018", "duration": "4", "order": "3", "parent": "15", progress: 0.5, open: true },
-                { "id": 22, "text": "Software design", "start_date": "03-04-2018", "duration": "4", "order": "3", "parent": "15", progress: 0.1, open: true },
-                { "id": 23, "text": "Interface setup", "start_date": "03-04-2018", "duration": "5", "order": "3", "parent": "15", progress: 0, open: true },
-                { "id": 24, "text": "Release v1.0", "start_date": "15-04-2018", "order": "3", "type": 'gantt.config.types.milestone', "parent": "11", progress: 0, open: true }
-            ],
-
-            links: [
-                { id: "1", source: "1", target: "2", type: "1" },
-
-                { id: "2", source: "2", target: "3", type: "0" },
-                { id: "3", source: "3", target: "4", type: "0" },
-                { id: "4", source: "2", target: "5", type: "2" },
-                { id: "5", source: "2", target: "6", type: "2" },
-                { id: "6", source: "3", target: "7", type: "2" },
-                { id: "7", source: "4", target: "8", type: "2" },
-                { id: "8", source: "4", target: "9", type: "2" },
-                { id: "9", source: "4", target: "10", type: "2" },
-
-                { id: "10", source: "11", target: "12", type: "1" },
-                { id: "11", source: "11", target: "13", type: "1" },
-                { id: "12", source: "11", target: "14", type: "1" },
-                { id: "13", source: "11", target: "15", type: "1" },
-                { id: "14", source: "11", target: "16", type: "1" },
-
-                { id: "15", source: "13", target: "17", type: "1" },
-                { id: "16", source: "17", target: "25", type: "0" },
-                { id: "23", source: "25", target: "18", type: "0" },
-                { id: "17", source: "18", target: "19", type: "0" },
-                { id: "18", source: "19", target: "20", type: "0" },
-                { id: "19", source: "15", target: "21", type: "2" },
-                { id: "20", source: "15", target: "22", type: "2" },
-                { id: "21", source: "15", target: "23", type: "2" },
-                { id: "22", source: "13", target: "24", type: "0" }
-            ]
-        };
-
-        var getListItemHTML = function (type, count, active) {
-            return '<li' + (active ? ' class="active"' : '') + '><a href="#">' + type + 's <span class="badge">' + count + '</span></a></li>';
-        };
-
-        var updateInfo = function () {
-            var state = gantt.getState();
-            var tasks = gantt.getTaskByTime(state.min_date, state.max_date);
-            var types = gantt.config.types;
-            var result = {};
-            var html = "";
-            var active = false;
-
-            // get available types
-            for (var t in types) {
-                result[types[t]] = 0;
-            }
-
-            // sort tasks by type
-            for (var i = 0, l = tasks.length; i < l; i++) {
-                if (tasks[i].type && result[tasks[i].type] !== "undefined")
-                    result[tasks[i].type] += 1;
-                else
-                    result[types.task] += 1;
-            }
-
-            // render list items for each type
-            for (var j in result) {
-                if (j === types.task) {
-                    active = true;
-                }
-
-                else {
-                    active = false;
-                }
-
-                html += getListItemHTML(j, result[j], active);
-            }
-            document.getElementById("gantt_info").innerHTML = html;
-        };
-
+        
         gantt.templates.scale_cell_class = function (date) {
             if (date.getDay() === 0 || date.getDay() === 6) {
                 return "weekend";
@@ -471,12 +416,12 @@ CKO.FORMS.DIRECTIVES.ViewForm = function () {
 
         gantt.config.columns = [
             {
-                name: "text", label: "Task name", width: "*", tree: true
+                name: "text", label: "Phase", width: "*", tree: true
             },
             {
-                name: "start_time", label: "Start time", template: function (obj) {
+                name: "start", label: "Start Date", template: function (obj) {
                     return gantt.templates.date_grid(obj.start_date);
-                }, align: "center", width: 60
+                }, align: "center", width: 100
             },
             {
                 name: "duration", label: "Duration", align: "center", width: 60
@@ -486,24 +431,143 @@ CKO.FORMS.DIRECTIVES.ViewForm = function () {
             }
         ];
 
-        gantt.config.grid_width = 390;
-        gantt.config.date_grid = "%F %d";
-        gantt.config.scale_height = 60;
-        gantt.config.subscales = [
-            { unit: "month", step: 1, date: "Month #%M" }
-        ];
+        gantt.config.grid_width = 350;
+        gantt.config.scale_height = 30;
+        gantt.config.xml_date = "%m/%d/%Y";
+        gantt.config.fit_tasks = true;
+        gantt.config.scale_unit = "month";
+        gantt.config.date_grid = "%M %d";
+        gantt.config.date_scale = "%M %Y";
+        //gantt.config.scale_unit = "week";
+        //gantt.config.date_scale = "Month #%M";
 
-        gantt.attachEvent("onAfterTaskAdd", function (id, item) {
-            updateInfo();
+
+        gantt.templates.task_class = function (start, end, task) {
+            switch (task.text) {
+                case "Assess":
+                    return "assess";
+                    break;
+
+                case "Design":
+                    return "design";
+                    break;
+
+                case "Develop":
+                    return "develop";
+                    break;
+
+                case "Pilot":
+                    return "pilot";
+                    break;
+
+                case "Implement":
+                    return "implement";
+                    break;
+            }
+        };
+
+        //var els = document.querySelectorAll("input[name='scale']");
+        //for (var i = 0; i < els.length; i++) {
+        //    els[i].onclick = function (e) {
+        //        e = e || window.event;
+        //        var el = e.target || e.srcElement;
+        //        var value = el.value;
+        //        setScaleConfig(value);
+        //        gantt.render();
+        //    };
+        //}
+
+        //$("#ddScale option").each(function () {
+        //    if ($(this).html() === scale.text) {
+        //        var value = $(this).prop('selected', true);
+        //        e = e || window.event;
+        //        var el = e.target || e.srcElement;
+        //        var value = el.value;
+        //        setScaleConfig(value);
+        //        gantt.render();
+        //    }
+        //});       
+
+        $("#btnDay").on("click", function () {
+            var value = $(this).prop('value');
+            setScaleConfig(value);
+            gantt.render();
         });
 
-        gantt.attachEvent("onAfterTaskDelete", function (id, item) {
-            updateInfo();
+        $("#btnWeek").on("click", function () {
+            var value = $(this).prop('value');
+            setScaleConfig(value);
+            gantt.render();
         });
 
+        $("#btnMonth").on("click", function () {
+            var value = $(this).prop('value');
+            setScaleConfig(value);
+            gantt.render();
+        });
+
+        $("#btnYear").on("click", function () {
+            var value = $(this).prop('value');
+            setScaleConfig(value);
+            gantt.render();
+        });
+
+        // Select gantt time scale
+        function setScaleConfig(level) {
+            switch (level) {
+                case "day":
+                    gantt.config.scale_unit = "day";
+                    gantt.config.step = 1;
+                    gantt.config.date_scale = "%M %d ";
+                    gantt.templates.date_scale = null;
+                    gantt.config.scale_height = 30;
+                    gantt.config.subscales = [];
+                    break;
+
+                case "week":
+                    var weekScaleTemplate = function (date) {
+                        var dateToStr = gantt.date.date_to_str("Week of: %M %d");
+                        var endDate = gantt.date.add(gantt.date.add(date, 1, "week"), -1, "day");
+                        return dateToStr(date) + " - " + dateToStr(endDate);
+                    };
+
+                    gantt.config.scale_unit = "week";
+                    gantt.config.step = 1;
+                    gantt.templates.date_scale = weekScaleTemplate;
+                    gantt.config.scale_height = 30;
+                    gantt.config.subscales = [
+                        { unit: "day", step: 1, date: "%D %M %j" }
+                    ];
+                    break;
+
+                case "month":
+                    gantt.config.scale_unit = "month";
+                    gantt.config.date_scale = "%M %Y";
+                    gantt.templates.date_scale = null;
+                    gantt.config.scale_height = 40;
+                    gantt.config.subscales = [
+                        { unit: "week", step: 1, date: "Week #: %W" }
+                    ];
+                    break;
+
+                case "year":
+                    gantt.config.scale_unit = "year";
+                    gantt.config.step = 1;
+                    gantt.config.date_scale = "%Y";
+                    gantt.templates.date_scale = null;
+                    gantt.config.min_column_width = 50;
+                    gantt.config.scale_height = 60;
+                    gantt.config.subscales = [
+                        { unit: "month", step: 1, date: "%M" }
+                    ];
+                    break;
+            }
+        }
+        setScaleConfig("month");
         gantt.init("Phases"); //div name
-        gantt.parse(demo_tasks);   //json series data
-        //updateInfo();       //limit to edit and new forms
+
+        gantt.parse(v.ganttdata);
+        gantt.config.readonly = false;
     }
 
     return {
